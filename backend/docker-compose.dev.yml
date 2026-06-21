@@ -1,0 +1,326 @@
+# Docker Compose for Development
+# Uses Dockerfile.dev for hot reload and faster builds
+
+version: '3.8'
+
+services:
+  # ─── PostgreSQL Database ───────────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: busapp-postgres-dev
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-busbooking}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+      - ./seed_roles_permissions.sql:/docker-entrypoint-initdb.d/01-seed_roles_permissions.sql
+      - ./seed_bus_layouts.sql:/docker-entrypoint-initdb.d/02-seed_bus_layouts.sql
+    networks:
+      - busapp-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d busbooking"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Redis Cache ───────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: busapp-redis-dev
+    command: >
+      sh -c '
+        if [ -n "$$REDIS_PASSWORD" ]; then
+          redis-server --requirepass "$$REDIS_PASSWORD"
+        else
+          redis-server
+        fi
+      '
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    ports:
+      - "6379:6379"
+    networks:
+      - busapp-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── RedisInsight (Redis GUI) ──────────────────────────────────────────────
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: busapp-redisinsight-dev
+    ports:
+      - "5540:5540"
+    volumes:
+      - redisinsight_data_dev:/data
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - busapp-network
+
+  # ─── MinIO Object Storage ──────────────────────────────────────────────────
+  minio:
+    image: minio/minio:latest
+    container_name: busapp-minio-dev
+    ports:
+      - "9000:9000"   # API port
+      - "9001:9001"   # Console port
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data_dev:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - busapp-network
+
+  # ─── RabbitMQ Message Queue ────────────────────────────────────────────────
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: busapp-rabbitmq-dev
+    hostname: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:-/}
+    ports:
+      - "5672:5672"   # AMQP port
+      - "15672:15672" # Management UI
+    volumes:
+      - rabbitmq_data_dev:/var/lib/rabbitmq
+      - rabbitmq_logs_dev:/var/log/rabbitmq
+    networks:
+      - busapp-network
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  # ─── Eureka Server (Service Discovery) ─────────────────────────────────────
+  eureka-server:
+    build:
+      context: .
+      dockerfile: go-bus-registry-service/Dockerfile.dev
+    container_name: busapp-eureka-dev
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - EUREKA_INSTANCE_HOSTNAME=eureka-server
+    networks:
+      - busapp-network
+    volumes:
+      - ./go-bus-registry-service/src:/app/go-bus-registry-service/src
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ─── Gateway Service ───────────────────────────────────────────────────────
+  gateway-service:
+    build:
+      context: .
+      dockerfile: go-bus-gateway-service/Dockerfile.dev
+    container_name: busapp-gateway-dev
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - EUREKA_HOST=eureka-server
+      - EUREKA_PORT=8761
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=${REDIS_PORT:-6379}
+      - SPRING_DATA_REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - busapp-network
+    volumes:
+      - ./go-bus-gateway-service/src:/app/go-bus-gateway-service/src
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ─── User Service ──────────────────────────────────────────────────────────
+  user-service:
+    build:
+      context: .
+      dockerfile: go-bus-user-service/Dockerfile.dev
+    container_name: busapp-user-dev
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - POSTGRES_HOST=${POSTGRES_HOST:-postgres}
+      - POSTGRES_PORT=${POSTGRES_PORT:-5432}
+      - POSTGRES_DB=${POSTGRES_DB:-busbooking}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - PGSSLMODE=${PGSSLMODE:-disable}
+      - PGCHANNELBINDING=${PGCHANNELBINDING:-disable}
+      - REDIS_HOST=redis
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - EUREKA_HOST=eureka-server
+      - EUREKA_PORT=8761
+      - JWT_PRIVATE_KEY=${JWT_PRIVATE_KEY}
+      - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY}
+      - JWT_ACCESS_EXPIRY=${JWT_ACCESS_EXPIRY:-900000}
+      - JWT_REFRESH_EXPIRY=${JWT_REFRESH_EXPIRY:-604800000}
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT:-http://minio:9000}
+      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:-minioadmin}
+      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:-minioadmin}
+      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME:-busapp-profiles}
+      - BAKONG_ACCOUNT_ID=${BAKONG_ACCOUNT_ID}
+      - ACQUIRINGBANK=${ACQUIRINGBANK}
+      - MERCHANTNAME=${MERCHANTNAME}
+      - BAKONG_BASE_URL=${BAKONG_BASE_URL}
+      - EMAIL=${EMAIL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - busapp-network
+    volumes:
+      - ./go-bus-user-service/src:/app/go-bus-user-service/src
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  # ─── Bus Service ───────────────────────────────────────────────────────────
+  bus-service:
+    build:
+      context: .
+      dockerfile: go-bus-bus-service/Dockerfile.dev
+    container_name: busapp-bus-dev
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - POSTGRES_HOST=${POSTGRES_HOST:-postgres}
+      - POSTGRES_PORT=${POSTGRES_PORT:-5432}
+      - POSTGRES_DB=${POSTGRES_DB:-busbooking}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - PGSSLMODE=${PGSSLMODE:-disable}
+      - PGCHANNELBINDING=${PGCHANNELBINDING:-disable}
+      - EUREKA_HOST=eureka-server
+      - EUREKA_PORT=8761
+      - BOOKING_SERVICE_HOST=booking-service
+      - BOOKING_SERVICE_PORT=8083
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - busapp-network
+    volumes:
+      - ./go-bus-bus-service/src:/app/go-bus-bus-service/src
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  # ─── Booking Service ───────────────────────────────────────────────────────
+  booking-service:
+    build:
+      context: .
+      dockerfile: go-bus-booking-service/Dockerfile.dev
+    container_name: busapp-booking-dev
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - POSTGRES_HOST=${POSTGRES_HOST:-postgres}
+      - POSTGRES_PORT=${POSTGRES_PORT:-5432}
+      - POSTGRES_DB=${POSTGRES_DB:-busbooking}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - PGSSLMODE=${PGSSLMODE:-disable}
+      - PGCHANNELBINDING=${PGCHANNELBINDING:-disable}
+      - REDIS_HOST=redis
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME:-guest}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+      - RABBITMQ_VHOST=${RABBITMQ_VHOST:-/}
+      - EUREKA_HOST=eureka-server
+      - EUREKA_PORT=8761
+      - BUS-SERVICE-URL=http://bus-service:8082
+      - USER-SERVICE-URL=http://user-service:8081
+      - BAKONG_ACCOUNT_ID=${BAKONG_ACCOUNT_ID}
+      - ACQUIRINGBANK=${ACQUIRINGBANK}
+      - MERCHANTNAME=${MERCHANTNAME}
+      - MOBILENUMBERSTORELABEL=${MOBILENUMBERSTORELABEL}
+      - STORELABEL=${STORELABEL}
+      - BAKONG_BASE_URL=${BAKONG_BASE_URL}
+      - EMAIL=${EMAIL}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_ENABLED=${TELEGRAM_ENABLED:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - busapp-network
+    volumes:
+      - ./go-bus-booking-service/src:/app/go-bus-booking-service/src
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+networks:
+  busapp-network:
+    driver: bridge
+
+volumes:
+  postgres_data_dev:
+  redisinsight_data_dev:
+  rabbitmq_data_dev:
+  rabbitmq_logs_dev:
+  minio_data_dev:

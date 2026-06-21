@@ -1,0 +1,63 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot'        version '3.3.5'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group   = 'com.busapp'
+version = '1.0.0'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    springCloudVersion = '2023.0.3'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.apache.commons:commons-pool2'         // Lettuce connection pooling
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    // Structured (JSON / key-value) logging + StructuredArguments.kv(...)
+    implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
+    
+    // Apache POI for Excel generation
+    implementation 'org.apache.poi:poi:5.2.5'
+    implementation 'org.apache.poi:poi-ooxml:5.2.5'
+    
+    // MinIO for object storage
+    implementation 'io.minio:minio:8.5.7'
+    
+    // Bakong KHQR for payment
+    implementation 'kh.gov.nbc.bakong_khqr:sdk-java:1.0.0.16'
+    
+    runtimeOnly     'io.jsonwebtoken:jjwt-impl:0.12.5'
+    runtimeOnly     'io.jsonwebtoken:jjwt-jackson:0.12.5'
+    runtimeOnly     'org.postgresql:postgresql'
+    compileOnly         'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation  'org.springframework.boot:spring-boot-starter-test'
+}
+
+test {
+    useJUnitPlatform()
+}

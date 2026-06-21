@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Telegram Clone System Architecture</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #0d1117;
+  color: #e6edf3;
+  padding: 24px;
+  min-width: 1100px;
+}
+h1 { text-align: center; font-size: 20px; color: #58a6ff; margin-bottom: 4px; font-weight: 700; }
+.subtitle { text-align: center; color: #8b949e; font-size: 12px; margin-bottom: 24px; }
+
+.arch {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ZONE ROWS */
+.zone {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.zone-label {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  padding: 8px 4px;
+  border-radius: 6px;
+  min-width: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.zone-body {
+  flex: 1;
+  display: flex;
+  gap: 10px;
+  border-radius: 10px;
+  padding: 10px;
+  border: 1px solid;
+}
+
+/* CLIENT ZONE */
+.zone-client .zone-label { background: #1c2a3e; color: #58a6ff; border: 1px solid #388bfd44; }
+.zone-client .zone-body { border-color: #388bfd33; background: #0f1822; }
+
+/* GATEWAY ZONE */
+.zone-gateway .zone-label { background: #1e1a30; color: #bc8cff; border: 1px solid #bc8cff44; }
+.zone-gateway .zone-body { border-color: #bc8cff33; background: #100f1c; }
+
+/* APP ZONE */
+.zone-app .zone-label { background: #1a2320; color: #3fb950; border: 1px solid #3fb95044; }
+.zone-app .zone-body { border-color: #3fb95033; background: #0f1810; }
+
+/* MESSAGING ZONE */
+.zone-msg .zone-label { background: #221e14; color: #d29922; border: 1px solid #d2992244; }
+.zone-msg .zone-body { border-color: #d2992233; background: #181510; }
+
+/* TDLIGHT ZONE */
+.zone-td .zone-label { background: #1c2433; color: #58a6ff; border: 1px solid #388bfd44; }
+.zone-td .zone-body { border-color: #388bfd44; background: #0d1520; }
+
+/* DATA ZONE */
+.zone-data .zone-label { background: #1d1520; color: #f778ba; border: 1px solid #f778ba44; }
+.zone-data .zone-body { border-color: #f778ba33; background: #110d16; }
+
+/* OPS ZONE */
+.zone-ops .zone-label { background: #1a1f1a; color: #7ee787; border: 1px solid #7ee78744; }
+.zone-ops .zone-body { border-color: #7ee78733; background: #0d110d; }
+
+/* BOXES */
+.box {
+  border-radius: 8px;
+  padding: 8px 10px;
+  border: 1px solid;
+  flex: 1;
+  min-width: 90px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.box-title {
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+
+.box-item {
+  font-size: 10px;
+  color: #8b949e;
+  padding-left: 8px;
+  border-left: 2px solid;
+  margin: 1px 0;
+  line-height: 1.4;
+}
+
+/* Box color variants */
+.b-blue { background: #151f2e; border-color: #388bfd44; }
+.b-blue .box-title { color: #58a6ff; }
+.b-blue .box-item { border-color: #388bfd55; }
+
+.b-purple { background: #1a1530; border-color: #bc8cff44; }
+.b-purple .box-title { color: #bc8cff; }
+.b-purple .box-item { border-color: #bc8cff55; }
+
+.b-green { background: #131c14; border-color: #3fb95044; }
+.b-green .box-title { color: #3fb950; }
+.b-green .box-item { border-color: #3fb95055; }
+
+.b-yellow { background: #1c1810; border-color: #d2992244; }
+.b-yellow .box-title { color: #d29922; }
+.b-yellow .box-item { border-color: #d2992255; }
+
+.b-red { background: #200f10; border-color: #f8514944; }
+.b-red .box-title { color: #f85149; }
+.b-red .box-item { border-color: #f8514955; }
+
+.b-pink { background: #1e1020; border-color: #f778ba44; }
+.b-pink .box-title { color: #f778ba; }
+.b-pink .box-item { border-color: #f778ba55; }
+
+.b-teal { background: #0f1c1c; border-color: #39d35344; }
+.b-teal .box-title { color: #39d353; }
+.b-teal .box-item { border-color: #39d35355; }
+
+.b-orange { background: #1e1610; border-color: #e3b34144; }
+.b-orange .box-title { color: #e3b341; }
+.b-orange .box-item { border-color: #e3b34155; }
+
+/* ARROW ROW */
+.arrow-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 40px;
+  gap: 0;
+}
+
+.arrow-line {
+  flex: 1;
+  height: 2px;
+  background: linear-gradient(90deg, #30363d, #58a6ff55, #30363d);
+  position: relative;
+}
+
+.arrow-label {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  padding: 3px 12px;
+  font-size: 10px;
+  color: #8b949e;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Telegram external */
+.telegram-ext {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a2d4a, #0d2137);
+  border: 2px solid #0088cc88;
+  border-radius: 12px;
+  padding: 12px 20px;
+  gap: 16px;
+  margin: 0 40px;
+}
+
+.tg-label { color: #0088cc; font-weight: 700; font-size: 13px; }
+.tg-sub { color: #8b949e; font-size: 10px; margin-top: 2px; }
+.tg-badge {
+  background: #0088cc22;
+  border: 1px solid #0088cc44;
+  color: #0088cc;
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+/* tech tags */
+.tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.tag {
+  font-size: 9px;
+  border-radius: 4px;
+  padding: 1px 5px;
+  background: #21262d;
+  color: #8b949e;
+  border: 1px solid #30363d;
+}
+</style>
+</head>
+<body>
+
+<h1>⚡ Telegram Clone — System Architecture</h1>
+<div class="subtitle">TDLight Java · Spring Boot · Production-Grade · Microservices</div>
+
+<div class="arch">
+
+  <!-- CLIENT LAYER -->
+  <div class="zone zone-client">
+    <div class="zone-label">Client</div>
+    <div class="zone-body">
+      <div class="box b-blue">
+        <div class="box-title">📱 Mobile Apps</div>
+        <div class="box-item">Flutter / React Native</div>
+        <div class="box-item">iOS (Swift) & Android</div>
+        <div class="box-item">Offline-first + sync</div>
+        <div class="tags"><span class="tag">FCM</span><span class="tag">APNs</span></div>
+      </div>
+      <div class="box b-blue">
+        <div class="box-title">🖥️ Web Client</div>
+        <div class="box-item">React / Next.js</div>
+        <div class="box-item">WebSocket (STOMP)</div>
+        <div class="box-item">Service Worker cache</div>
+        <div class="tags"><span class="tag">WebRTC</span><span class="tag">PWA</span></div>
+      </div>
+      <div class="box b-blue">
+        <div class="box-title">🖱️ Desktop Client</div>
+        <div class="box-item">Electron / Tauri</div>
+        <div class="box-item">Local message cache</div>
+        <div class="box-item">Native notifications</div>
+        <div class="tags"><span class="tag">Windows</span><span class="tag">macOS</span><span class="tag">Linux</span></div>
+      </div>
+      <div class="box b-purple">
+        <div class="box-title">🤖 Bot Clients</div>
+        <div class="box-item">Bot API (HTTP polling)</div>
+        <div class="box-item">Webhook endpoint</div>
+        <div class="box-item">Third-party integrations</div>
+        <div class="tags"><span class="tag">REST</span><span class="tag">Webhooks</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARROW -->
+  <div class="arrow-row">
+    <div class="arrow-line"></div>
+    <div class="arrow-label">🔒 HTTPS / WSS / gRPC-Web</div>
+    <div class="arrow-line"></div>
+  </div>
+
+  <!-- GATEWAY LAYER -->
+  <div class="zone zone-gateway">
+    <div class="zone-label">Gateway</div>
+    <div class="zone-body">
+      <div class="box b-purple">
+        <div class="box-title">🛡️ CDN / WAF</div>
+        <div class="box-item">CloudFlare / AWS CF</div>
+        <div class="box-item">DDoS protection</div>
+        <div class="box-item">Static asset caching</div>
+        <div class="tags"><span class="tag">WAF</span><span class="tag">TLS 1.3</span></div>
+      </div>
+      <div class="box b-purple">
+        <div class="box-title">🔀 API Gateway</div>
+        <div class="box-item">Kong / Spring Cloud GW</div>
+        <div class="box-item">Rate limiting (Bucket4j)</div>
+        <div class="box-item">JWT validation</div>
+        <div class="box-item">Request routing</div>
+        <div class="tags"><span class="tag">OpenAPI</span><span class="tag">OAuth2</span></div>
+      </div>
+      <div class="box b-purple">
+        <div class="box-title">⚖️ Load Balancer</div>
+        <div class="box-item">Nginx / HAProxy</div>
+        <div class="box-item">WebSocket sticky session</div>
+        <div class="box-item">Health check routing</div>
+        <div class="tags"><span class="tag">L7 LB</span><span class="tag">SSL</span></div>
+      </div>
+      <div class="box b-red">
+        <div class="box-title">🔐 Auth Service</div>
+        <div class="box-item">JWT + Refresh tokens</div>
+        <div class="box-item">Phone OTP / TOTP 2FA</div>
+        <div class="box-item">OAuth2 / OIDC login</div>
+        <div class="tags"><span class="tag">Keycloak</span><span class="tag">Spring Sec</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARROW -->
+  <div class="arrow-row">
+    <div class="arrow-line"></div>
+    <div class="arrow-label">🔁 Internal mTLS / Service Mesh</div>
+    <div class="arrow-line"></div>
+  </div>
+
+  <!-- APPLICATION LAYER -->
+  <div class="zone zone-app">
+    <div class="zone-label">App Services</div>
+    <div class="zone-body">
+      <div class="box b-green">
+        <div class="box-title">👤 User Service</div>
+        <div class="box-item">Profile management</div>
+        <div class="box-item">Contacts & blocklist</div>
+        <div class="box-item">Online/last seen status</div>
+        <div class="tags"><span class="tag">Spring Boot</span><span class="tag">JPA</span></div>
+      </div>
+      <div class="box b-green">
+        <div class="box-title">💬 Chat Service</div>
+        <div class="box-item">Private / group / channel</div>
+        <div class="box-item">Members & permissions</div>
+        <div class="box-item">Chat metadata & settings</div>
+        <div class="tags"><span class="tag">Spring Boot</span><span class="tag">Redis</span></div>
+      </div>
+      <div class="box b-green">
+        <div class="box-title">📨 Message Service</div>
+        <div class="box-item">Send / edit / delete</div>
+        <div class="box-item">Read receipts (ticks)</div>
+        <div class="box-item">Reactions & replies</div>
+        <div class="box-item">Scheduled messages</div>
+        <div class="tags"><span class="tag">WebFlux</span><span class="tag">CQRS</span></div>
+      </div>
+      <div class="box b-green">
+        <div class="box-title">🖼️ Media Service</div>
+        <div class="box-item">Upload / download stream</div>
+        <div class="box-item">Thumbnail generation</div>
+        <div class="box-item">Video transcoding</div>
+        <div class="tags"><span class="tag">FFmpeg</span><span class="tag">S3</span></div>
+      </div>
+      <div class="box b-teal">
+        <div class="box-title">🔔 Notification Svc</div>
+        <div class="box-item">FCM / APNs push</div>
+        <div class="box-item">WebSocket push</div>
+        <div class="box-item">Typing indicators</div>
+        <div class="tags"><span class="tag">Firebase</span><span class="tag">STOMP</span></div>
+      </div>
+      <div class="box b-teal">
+        <div class="box-title">🔍 Search Service</div>
+        <div class="box-item">Full-text msg search</div>
+        <div class="box-item">User / chat discovery</div>
+        <div class="box-item">Hashtag indexing</div>
+        <div class="tags"><span class="tag">Elasticsearch</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARROW -->
+  <div class="arrow-row">
+    <div class="arrow-line"></div>
+    <div class="arrow-label">📨 Kafka Topics · Async Events</div>
+    <div class="arrow-line"></div>
+  </div>
+
+  <!-- MESSAGING LAYER -->
+  <div class="zone zone-msg">
+    <div class="zone-label">Messaging</div>
+    <div class="zone-body">
+      <div class="box b-yellow">
+        <div class="box-title">📦 Apache Kafka</div>
+        <div class="box-item">msg.send · msg.edit · msg.delete</div>
+        <div class="box-item">user.status · typing.indicator</div>
+        <div class="box-item">media.upload · notification.push</div>
+        <div class="box-item">tdlight.update · bot.event</div>
+        <div class="tags"><span class="tag">Kafka Cluster</span><span class="tag">Zookeeper</span><span class="tag">3 Brokers</span></div>
+      </div>
+      <div class="box b-yellow">
+        <div class="box-title">🔄 Event Router</div>
+        <div class="box-item">TDLib Update → Topic map</div>
+        <div class="box-item">Fan-out to consumers</div>
+        <div class="box-item">Dead letter queue (DLQ)</div>
+        <div class="box-item">Retry + backoff policy</div>
+        <div class="tags"><span class="tag">Spring Kafka</span><span class="tag">DLQ</span></div>
+      </div>
+      <div class="box b-orange">
+        <div class="box-title">⚡ WebSocket Gateway</div>
+        <div class="box-item">STOMP broker relay</div>
+        <div class="box-item">Session registry (Redis)</div>
+        <div class="box-item">Presence tracking</div>
+        <div class="box-item">Horizontal scale via Redis pub/sub</div>
+        <div class="tags"><span class="tag">Spring WS</span><span class="tag">STOMP</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARROW -->
+  <div class="arrow-row">
+    <div class="arrow-line"></div>
+    <div class="arrow-label">🔗 TDLib Native Bridge</div>
+    <div class="arrow-line"></div>
+  </div>
+
+  <!-- TDLIGHT LAYER -->
+  <div class="zone zone-td">
+    <div class="zone-label">TDLight</div>
+    <div class="zone-body">
+      <div class="box b-blue">
+        <div class="box-title">⚡ TDLight Client Manager</div>
+        <div class="box-item">Multi-account client pool</div>
+        <div class="box-item">Client lifecycle (init/destroy)</div>
+        <div class="box-item">Health check + auto-reconnect</div>
+        <div class="box-item">Load-balanced request dispatch</div>
+        <div class="tags"><span class="tag">tdlight-java</span><span class="tag">TDLib</span></div>
+      </div>
+      <div class="box b-blue">
+        <div class="box-title">🔑 Auth Flow Handler</div>
+        <div class="box-item">Phone → OTP → 2FA states</div>
+        <div class="box-item">QR code login support</div>
+        <div class="box-item">Session file persistence</div>
+        <div class="box-item">Token refresh + recovery</div>
+        <div class="tags"><span class="tag">MTProto</span><span class="tag">TDApi.Auth</span></div>
+      </div>
+      <div class="box b-blue">
+        <div class="box-title">📡 Update Handler</div>
+        <div class="box-item">TdApi.Update dispatcher</div>
+        <div class="box-item">UpdateNewMessage handler</div>
+        <div class="box-item">UpdateUserStatus handler</div>
+        <div class="box-item">→ Kafka publish pipeline</div>
+        <div class="tags"><span class="tag">Reactive</span><span class="tag">Async</span></div>
+      </div>
+      <div class="box b-blue">
+        <div class="box-title">🔒 Secret Chat Engine</div>
+        <div class="box-item">E2E encrypted channels</div>
+        <div class="box-item">Per-device key exchange</div>
+        <div class="box-item">Self-destruct timer logic</div>
+        <div class="tags"><span class="tag">E2E</span><span class="tag">MTProto2</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARROW -->
+  <div class="arrow-row">
+    <div class="arrow-line"></div>
+    <div class="arrow-label">☁️ MTProto Encrypted · Telegram Data Centers</div>
+    <div class="arrow-line"></div>
+  </div>
+
+  <!-- TELEGRAM EXTERNAL -->
+  <div class="telegram-ext">
+    <div>
+      <div class="tg-label">✈️ Telegram Network</div>
+      <div class="tg-sub">Official MTProto servers — not under your control</div>
+    </div>
+    <span class="tg-badge">DC1 · Miami</span>
+    <span class="tg-badge">DC2 · Amsterdam</span>
+    <span class="tg-badge">DC3 · Miami</span>
+    <span class="tg-badge">DC4 · Amsterdam</span>
+    <span class="tg-badge">DC5 · Singapore</span>
+    <span class="tg-badge">MTProto 2.0</span>
+    <span class="tg-badge">E2E Encrypted</span>
+  </div>
+
+  <!-- DATA LAYER -->
+  <div class="zone zone-data">
+    <div class="zone-label">Data</div>
+    <div class="zone-body">
+      <div class="box b-pink">
+        <div class="box-title">🐘 PostgreSQL</div>
+        <div class="box-item">Users, chats, channels</div>
+        <div class="box-item">Message metadata</div>
+        <div class="box-item">Read replicas (CQRS)</div>
+        <div class="tags"><span class="tag">Primary + Replica</span><span class="tag">Flyway</span></div>
+      </div>
+      <div class="box b-pink">
+        <div class="box-title">🔴 Redis Cluster</div>
+        <div class="box-item">Session store</div>
+        <div class="box-item">L1 hot cache</div>
+        <div class="box-item">WS presence registry</div>
+        <div class="box-item">Pub/Sub for WS scale</div>
+        <div class="tags"><span class="tag">Redis 7</span><span class="tag">Cluster</span></div>
+      </div>
+      <div class="box b-pink">
+        <div class="box-title">🗃️ Cassandra / Scylla</div>
+        <div class="box-item">Message history (write-heavy)</div>
+        <div class="box-item">Horizontal partition</div>
+        <div class="box-item">Time-series events</div>
+        <div class="tags"><span class="tag">Scylla</span><span class="tag">Wide-row</span></div>
+      </div>
+      <div class="box b-pink">
+        <div class="box-title">🔎 Elasticsearch</div>
+        <div class="box-item">Full-text search index</div>
+        <div class="box-item">User / chat discovery</div>
+        <div class="box-item">Hashtag & mention index</div>
+        <div class="tags"><span class="tag">ES 8.x</span><span class="tag">Kibana</span></div>
+      </div>
+      <div class="box b-pink">
+        <div class="box-title">🪣 MinIO / S3</div>
+        <div class="box-item">Photo / video / docs</div>
+        <div class="box-item">Voice messages</div>
+        <div class="box-item">CDN-backed delivery</div>
+        <div class="tags"><span class="tag">S3 API</span><span class="tag">CDN</span></div>
+      </div>
+      <div class="box b-pink">
+        <div class="box-title">🔏 Vault</div>
+        <div class="box-item">Secrets management</div>
+        <div class="box-item">DB credentials rotation</div>
+        <div class="box-item">API key storage</div>
+        <div class="tags"><span class="tag">HashiCorp</span><span class="tag">PKI</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPS LAYER -->
+  <div class="zone zone-ops">
+    <div class="zone-label">Observability</div>
+    <div class="zone-body">
+      <div class="box b-teal">
+        <div class="box-title">📊 Prometheus + Grafana</div>
+        <div class="box-item">JVM + app metrics</div>
+        <div class="box-item">Kafka / Redis dashboards</div>
+        <div class="box-item">Alertmanager rules</div>
+        <div class="tags"><span class="tag">Spring Actuator</span><span class="tag">Micrometer</span></div>
+      </div>
+      <div class="box b-teal">
+        <div class="box-title">🔭 Distributed Tracing</div>
+        <div class="box-item">OpenTelemetry SDK</div>
+        <div class="box-item">Jaeger trace UI</div>
+        <div class="box-item">Trace → Log correlation</div>
+        <div class="tags"><span class="tag">OTel</span><span class="tag">Jaeger</span></div>
+      </div>
+      <div class="box b-teal">
+        <div class="box-title">📜 Log Aggregation</div>
+        <div class="box-item">Logback structured JSON</div>
+        <div class="box-item">Loki / ELK stack</div>
+        <div class="box-item">Log-based alerting</div>
+        <div class="tags"><span class="tag">Loki</span><span class="tag">Kibana</span></div>
+      </div>
+      <div class="box b-teal">
+        <div class="box-title">🚢 Kubernetes + CI/CD</div>
+        <div class="box-item">Helm chart per service</div>
+        <div class="box-item">HPA autoscaling</div>
+        <div class="box-item">GitHub Actions pipeline</div>
+        <div class="box-item">Blue/Green deploys</div>
+        <div class="tags"><span class="tag">K8s</span><span class="tag">Helm</span><span class="tag">Docker</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,121 @@
+server:
+  port: ${PORT:8082}
+
+spring:
+  application:
+    name: booking-service
+
+  cloud:
+    compatibility-verifier:
+      enabled: false
+  datasource:
+#    url: jdbc:postgresql://${POSTGRES_HOST:ep-dry-flower-a1e2sv79-pooler.ap-southeast-1.aws.neon.tech}:${POSTGRES_PORT:5432}/${POSTGRES_DB:neondb}?sslmode=${PGSSLMODE:require}&sslchannelbinding=${PGCHANNELBINDING:require}
+#    driver-class-name: org.postgresql.Driver
+#    username: ${POSTGRES_USER:neondb_owner}
+#    password: ${POSTGRES_PASSWORD:npg_MLKJPNA8nEu2}
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:busbooking}
+    driver-class-name: org.postgresql.Driver
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        hbm2ddl:
+          create_namespaces: true #create database schema if it not exist
+        jdbc:
+          lob:
+            non_contextual_creation: true
+        default_schema: booking_service
+  
+  # Redis Configuration
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8          # max simultaneous connections
+          max-idle: 8            # max idle connections kept in pool
+          min-idle: 2            # min idle connections (keep-warm)
+          max-wait: -1ms         # block indefinitely waiting for connection (-1 = no limit)
+        shutdown-timeout: 2s    # how long to wait for in-flight commands on shutdown
+  
+  # RabbitMQ Configuration
+  rabbitmq:
+    addresses: ${RABBITMQ_URL:amqp://guest:guest@localhost:5672}
+    listener:
+      simple:
+        retry:
+          enabled: true
+          initial-interval: 3000
+          max-attempts: 3
+          multiplier: 2.0
+        default-requeue-rejected: false
+        acknowledge-mode: auto
+
+bakong:
+  account-id : ${BAKONG_ACCOUNT_ID:chin_kongming@aclb}
+  acquiring-bank : ${ACQUIRINGBANK:chin_kongming@aclb}
+  merchant-name : ${MERCHANTNAME:CHIN KONG MING}
+  mobile-number : ${MOBILENUMBERSTORELABEL:85581362035}
+  store-label : ${STORELABEL:BusBooking}
+  baseUrl : ${BAKONG_BASE_URL:https://api-bakong.nbc.gov.kh}
+  email : ${EMAIL:kongming434@gmail.com}
+  pollingIntervalMs: ${POLL-INTERVAL:2000}
+  connectionTimeout : ${TIME-OUT:300000}
+
+# Telegram Bot Configuration
+telegram:
+  bot:
+    token: ${TELEGRAM_BOT_TOKEN:8600981103:AAGsQZWSK529nttVWJVkW9UNmSMmYke8_h0}
+#    chat-id: ${TELEGRAM_CHAT_ID:1544325641}
+    enabled: ${TELEGRAM_ENABLED:false}
+
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_BASE_URL}
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+
+# Feign client configuration
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: BASIC
+
+external:
+  bus-service:
+    url: ${BUS_SERVICE_BASE_URL:http://localhost:8082}
+    path: ${BUS-SERVICE-PATH:/api}
+  user-service:
+    url: ${USER_SERVICE_BASE_URL:http://localhost:8081}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    root: INFO
+    com.busapp.bookingservice: INFO
+    org.springframework.web: WARN
+    org.springframework.data.jpa: WARN
+    org.springframework.amqp: WARN
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

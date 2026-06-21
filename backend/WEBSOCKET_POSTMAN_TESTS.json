@@ -1,0 +1,206 @@
+{
+  "info": {
+    "name": "WebSocket Test Endpoints",
+    "description": "Test endpoints for WebSocket broadcasting",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Bus Service - WebSocket Tests",
+      "item": [
+        {
+          "name": "Test SEAT_BOOKED Event",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8082/api/test/websocket/seat/1?type=SEAT_BOOKED&seatId=5&seatNumber=A5",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8082",
+              "path": ["api", "test", "websocket", "seat", "1"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "SEAT_BOOKED"
+                },
+                {
+                  "key": "seatId",
+                  "value": "5"
+                },
+                {
+                  "key": "seatNumber",
+                  "value": "A5"
+                }
+              ]
+            },
+            "description": "Broadcasts a SEAT_BOOKED event to /topic/schedule/1/seats"
+          }
+        },
+        {
+          "name": "Test SEAT_RELEASED Event",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8082/api/test/websocket/seat/1?type=SEAT_RELEASED&seatId=5&seatNumber=A5",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8082",
+              "path": ["api", "test", "websocket", "seat", "1"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "SEAT_RELEASED"
+                },
+                {
+                  "key": "seatId",
+                  "value": "5"
+                },
+                {
+                  "key": "seatNumber",
+                  "value": "A5"
+                }
+              ]
+            },
+            "description": "Broadcasts a SEAT_RELEASED event to /topic/schedule/1/seats"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Booking Service - WebSocket Tests",
+      "item": [
+        {
+          "name": "Test PAYMENT_PENDING Event",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8083/api/test/websocket/payment/1?type=PAYMENT_PENDING&paymentId=1&bookingId=1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8083",
+              "path": ["api", "test", "websocket", "payment", "1"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "PAYMENT_PENDING"
+                },
+                {
+                  "key": "paymentId",
+                  "value": "1"
+                },
+                {
+                  "key": "bookingId",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Sends a PAYMENT_PENDING event to user 1"
+          }
+        },
+        {
+          "name": "Test PAYMENT_SUCCESS Event",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8083/api/test/websocket/payment/1?type=PAYMENT_SUCCESS&paymentId=1&bookingId=1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8083",
+              "path": ["api", "test", "websocket", "payment", "1"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "PAYMENT_SUCCESS"
+                },
+                {
+                  "key": "paymentId",
+                  "value": "1"
+                },
+                {
+                  "key": "bookingId",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Sends a PAYMENT_SUCCESS event to user 1"
+          }
+        },
+        {
+          "name": "Test PAYMENT_FAILED Event",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8083/api/test/websocket/payment/1?type=PAYMENT_FAILED&paymentId=1&bookingId=1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8083",
+              "path": ["api", "test", "websocket", "payment", "1"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "PAYMENT_FAILED"
+                },
+                {
+                  "key": "paymentId",
+                  "value": "1"
+                },
+                {
+                  "key": "bookingId",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Sends a PAYMENT_FAILED event to user 1"
+          }
+        },
+        {
+          "name": "Test DASHBOARD_UPDATE Event",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8083/api/test/websocket/dashboard?type=DASHBOARD_UPDATE",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8083",
+              "path": ["api", "test", "websocket", "dashboard"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "DASHBOARD_UPDATE"
+                }
+              ]
+            },
+            "description": "Broadcasts a DASHBOARD_UPDATE event to /topic/admin/dashboard"
+          }
+        },
+        {
+          "name": "Test NEW_BOOKING Event",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8083/api/test/websocket/dashboard?type=NEW_BOOKING",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8083",
+              "path": ["api", "test", "websocket", "dashboard"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "NEW_BOOKING"
+                }
+              ]
+            },
+            "description": "Broadcasts a NEW_BOOKING event to /topic/admin/dashboard"
+          }
+        }
+      ]
+    }
+  ]
+}

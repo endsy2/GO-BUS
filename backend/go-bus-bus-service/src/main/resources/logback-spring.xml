@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Unified logging configuration for all Go Bus Express microservices.
+
+  - traceId is pulled from the MDC (populated by the trace filters) so every
+    log line can be correlated across services.
+  - dev  profile  -> human-readable console pattern (still shows traceId + kv pairs)
+  - prod profile  -> single-line JSON (LogstashEncoder) for searchable/aggregated logs
+  - StructuredArguments.kv("k", v) in code renders as `k=v` in dev and as a
+    first-class JSON field in prod.
+  Package log levels are still controlled by `logging.level.*` in application.yml.
+-->
+<configuration>
+    <springProperty scope="context" name="appName" source="spring.application.name" defaultValue="unknown-service"/>
+
+    <!-- Human-readable console output for local development -->
+    <appender name="CONSOLE_PLAIN" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [${appName}] [traceId=%X{traceId:-}] %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Structured JSON output for production (Railway) — searchable key/value fields -->
+    <appender name="CONSOLE_JSON" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <includeMdcKeyName>traceId</includeMdcKeyName>
+            <customFields>{"service":"${appName}"}</customFields>
+            <fieldNames>
+                <timestamp>timestamp</timestamp>
+                <message>message</message>
+                <logger>logger</logger>
+                <thread>thread</thread>
+                <levelValue>[ignore]</levelValue>
+            </fieldNames>
+            <!--
+              Safety net so credentials never reach the log aggregator, even if
+              something is logged by mistake.
+              - <path> masks structured fields by name (e.g. StructuredArguments.kv("password", ...)).
+              - <value> masks by regex anywhere in the JSON, incl. inside the free-text message
+                (e.g. "Authorization: Bearer xxx", "password=xxx", long card numbers).
+              The real fix is still: don't pass secrets to the logger in the first place.
+            -->
+            <jsonGeneratorDecorator class="net.logstash.logback.mask.MaskingJsonGeneratorDecorator">
+                <defaultMask>****</defaultMask>
+                <path>password</path>
+                <path>pin</path>
+                <path>token</path>
+                <path>accessToken</path>
+                <path>refreshToken</path>
+                <path>authorization</path>
+                <path>secret</path>
+                <path>apiKey</path>
+                <path>cardNumber</path>
+                <!-- Bearer / JWT tokens embedded in free text -->
+                <value>(?i)(bearer\s+)[A-Za-z0-9._\-]+</value>
+                <!-- password=... / pwd=... / pin=... embedded in free text -->
+                <value>(?i)(password|passwd|pwd|pin|secret|token)\s*[=:]\s*\S+</value>
+                <!-- 13-19 digit card-like numbers -->
+                <value>\b\d{13,19}\b</value>
+            </jsonGeneratorDecorator>
+        </encoder>
+    </appender>
+
+    <springProfile name="prod">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE_JSON"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="!prod">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE_PLAIN"/>
+        </root>
+    </springProfile>
+</configuration>

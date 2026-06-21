@@ -1,0 +1,24 @@
+# Development Dockerfile for Eureka Server
+# Standalone build - doesn't require root project
+
+FROM gradle:8.5-jdk17
+WORKDIR /app
+
+# Copy service-specific gradle files
+COPY go-bus-registry-service/gradlew ./gradlew
+COPY go-bus-registry-service/gradle ./gradle
+COPY go-bus-registry-service/build.gradle ./build.gradle
+COPY go-bus-registry-service/settings.gradle ./settings.gradle
+COPY go-bus-registry-service/src ./src
+
+# Fix line endings and make gradlew executable (Windows compatibility)
+RUN sed -i 's/\r$//' gradlew && chmod +x gradlew
+
+# Download dependencies (cached layer)
+RUN ./gradlew dependencies --no-daemon || true
+
+# Expose port
+EXPOSE 8761
+
+# Run with hot reload (bootRun watches for changes)
+CMD ["./gradlew", "bootRun", "--no-daemon"]

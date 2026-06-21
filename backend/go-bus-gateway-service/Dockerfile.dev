@@ -1,0 +1,24 @@
+# Development Dockerfile for Gateway Service
+# Standalone build - doesn't require root project
+
+FROM gradle:8.5-jdk17
+WORKDIR /app
+
+# Copy service-specific gradle files
+COPY go-bus-gateway-service/gradlew ./gradlew
+COPY go-bus-gateway-service/gradle ./gradle
+COPY go-bus-gateway-service/build.gradle ./build.gradle
+COPY go-bus-gateway-service/settings.gradle ./settings.gradle
+COPY go-bus-gateway-service/src ./src
+
+# Fix line endings and make gradlew executable (Windows compatibility)
+RUN sed -i 's/\r$//' gradlew && chmod +x gradlew
+
+# Download dependencies (cached layer)
+RUN ./gradlew dependencies --no-daemon || true
+
+# Expose port
+EXPOSE 8080
+
+# Run with hot reload
+CMD ["./gradlew", "bootRun", "--no-daemon"]

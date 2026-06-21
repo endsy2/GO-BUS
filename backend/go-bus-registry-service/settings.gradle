@@ -1,0 +1,2 @@
+// Standalone – run independently: cd eureka-server && gradle bootRun
+rootProject.name = 'eureka-server'

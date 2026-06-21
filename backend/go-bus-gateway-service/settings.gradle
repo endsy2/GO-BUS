@@ -1,0 +1,2 @@
+// Standalone – run independently: cd gateway-service && gradle bootRun
+rootProject.name = 'gateway-service'

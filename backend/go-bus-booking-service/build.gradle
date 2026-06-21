@@ -1,0 +1,78 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot'        version '3.3.5'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group   = 'com.busapp'
+version = '1.0.0'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    springCloudVersion = '2023.0.3'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.apache.commons:commons-pool2'         // Lettuce connection pooling
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-amqp'
+    // Structured (JSON / key-value) logging + StructuredArguments.kv(...)
+    implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
+
+    runtimeOnly     'org.postgresql:postgresql'
+    compileOnly         'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation  'org.springframework.boot:spring-boot-starter-test'
+    
+    // Apache POI for Excel generation
+    implementation 'org.apache.poi:poi:5.2.5'
+    implementation 'org.apache.poi:poi-ooxml:5.2.5'
+    
+    // Bakong SDK
+    implementation 'kh.gov.nbc.bakong_khqr:sdk-java:1.0.0.16'
+    
+    // Telegram bot - exclude Jersey to avoid conflict with Eureka
+    implementation('org.telegram:telegrambots:6.8.0') {
+        exclude group: 'org.glassfish.jersey.core'
+        exclude group: 'org.glassfish.jersey.media'
+        exclude group: 'org.glassfish.jersey.inject'
+        exclude group: 'org.glassfish.jersey.containers'
+    }
+    
+    // Add Jersey 1.x for Eureka (compatible version)
+    implementation 'com.sun.jersey:jersey-client:1.19.4'
+    implementation 'com.sun.jersey:jersey-core:1.19.4'
+    implementation 'com.sun.jersey.contribs:jersey-apache-client4:1.19.4'
+    
+    // JAXB dependencies for Java 11+ (required by telegram bot and hibernate)
+    implementation 'javax.xml.bind:jaxb-api:2.3.1'
+    implementation 'org.glassfish.jaxb:jaxb-runtime:2.3.9'
+
+    //web socket
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+}
+
+
+test {
+    useJUnitPlatform()
+}

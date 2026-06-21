@@ -1,0 +1,346 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  Go Bus Express — Self-hosted VPS deployment (plain HTTP on server IP)
+#
+#  Brings up the FULL stack on a single VPS:
+#    infra (postgres · redis · rabbitmq · minio)
+#    eureka · user · bus · booking · gateway
+#    admin frontend (React, served by `serve`)
+#    nginx reverse proxy  ->  the ONLY publicly exposed port (80)
+#
+#  Everything else is reachable only inside the docker network, except a few
+#  admin ports bound to 127.0.0.1 (reach them through an SSH tunnel, never
+#  exposed to the internet).
+#
+#  Usage (run from the repo root on the VPS):
+#      cp .env.vps.example .env.vps
+#      # edit .env.vps  ->  set REACT_APP_BASE_URL / REACT_APP_WS_URL to your IP
+#      docker compose -f docker-compose.vps.yml --env-file .env.vps up -d --build
+#
+#  Then open:   http://<YOUR_VPS_IP>/
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── Infrastructure ──────────────────────────────────────────────────────────
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: busapp-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-busbooking}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "127.0.0.1:5432:5432"     # localhost-only (SSH tunnel for admin access)
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-busbooking}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - busapp-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: busapp-redis
+    restart: unless-stopped
+    command: >
+      sh -c '
+        if [ -n "$$REDIS_PASSWORD" ]; then
+          redis-server --requirepass "$$REDIS_PASSWORD"
+        else
+          redis-server
+        fi
+      '
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - busapp-net
+
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: busapp-rabbitmq
+    restart: unless-stopped
+    hostname: rabbitmq
+    ports:
+      - "127.0.0.1:15672:15672"   # management UI, localhost-only
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:-/}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    networks:
+      - busapp-net
+
+  minio:
+    image: minio/minio:latest
+    container_name: busapp-minio
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:9001:9001"     # console, localhost-only
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - busapp-net
+
+  # ── Service Discovery ───────────────────────────────────────────────────────
+
+  eureka-server:
+    build:
+      context: ./backend/go-bus-registry-service
+      dockerfile: Dockerfile
+    container_name: busapp-eureka
+    restart: unless-stopped
+    environment:
+      - EUREKA_INSTANCE_HOSTNAME=eureka-server
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - busapp-net
+
+  # ── Microservices ───────────────────────────────────────────────────────────
+
+  user-service:
+    build:
+      context: ./backend/go-bus-user-service
+      dockerfile: Dockerfile
+    container_name: busapp-user
+    restart: unless-stopped
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-busbooking}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - PGSSLMODE=disable
+      - EUREKA_HOST=eureka-server
+      - EUREKA_PORT=8761
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - SPRING_DATA_REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - JWT_ACCESS_EXPIRY=${JWT_ACCESS_EXPIRY:-900000}
+      - JWT_REFRESH_EXPIRY=${JWT_REFRESH_EXPIRY:-604800000}
+      - MINIO_ENDPOINT=http://minio:9000
+      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:-minioadmin}
+      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:-minioadmin}
+      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME:-busapp-profiles}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    networks:
+      - busapp-net
+
+  bus-service:
+    build:
+      context: ./backend/go-bus-bus-service
+      dockerfile: Dockerfile
+    container_name: busapp-bus
+    restart: unless-stopped
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-busbooking}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - PGSSLMODE=disable
+      - EUREKA_HOST=eureka-server
+      - EUREKA_PORT=8761
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    networks:
+      - busapp-net
+
+  booking-service:
+    build:
+      context: ./backend/go-bus-booking-service
+      dockerfile: Dockerfile
+    container_name: busapp-booking
+    restart: unless-stopped
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-busbooking}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - PGSSLMODE=disable
+      - EUREKA_HOST=eureka-server
+      - EUREKA_PORT=8761
+      - BUS-SERVICE-URL=http://bus-service:8082
+      - USER-SERVICE-URL=http://user-service:8081
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USERNAME:-guest}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+      - SPRING_RABBITMQ_VIRTUAL_HOST=${RABBITMQ_VHOST:-/}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - BAKONG_ACCOUNT_ID=${BAKONG_ACCOUNT_ID:-}
+      - ACQUIRINGBANK=${ACQUIRINGBANK:-}
+      - MERCHANTNAME=${MERCHANTNAME:-}
+      - MOBILENUMBERSTORELABEL=${MOBILENUMBERSTORELABEL:-}
+      - STORELABEL=${STORELABEL:-}
+      - BAKONG_BASE_URL=${BAKONG_BASE_URL:-}
+      - EMAIL=${EMAIL:-}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_ENABLED=${TELEGRAM_ENABLED:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    networks:
+      - busapp-net
+
+  # ── API Gateway ─────────────────────────────────────────────────────────────
+
+  gateway-service:
+    build:
+      context: ./backend/go-bus-gateway-service
+      dockerfile: Dockerfile
+    container_name: busapp-gateway
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"     # localhost-only; public access is via nginx
+    environment:
+      - EUREKA_HOST=eureka-server
+      - EUREKA_PORT=8761
+      - REGISTRY_SERVICE_URL=http://eureka-server:8761
+      # Downstream service URLs (gateway uses direct URLs, not Eureka lookup)
+      - USER_SERVICE_URL=http://user-service:8081
+      - BUS_SERVICE_URL=http://bus-service:8082
+      - BOOKING_SERVICE_URL=http://booking-service:8083
+      - BUS_SERVICE_WS_URL=ws://bus-service:8082
+      - BOOKING_SERVICE_WS_URL=ws://booking-service:8083
+      # Redis (token blacklist + rate limiting)
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - SPRING_DATA_REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      # CORS — single-origin via nginx means no cross-origin calls, but keep open
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-*}
+    depends_on:
+      redis:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+      bus-service:
+        condition: service_healthy
+      booking-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    networks:
+      - busapp-net
+
+  # ── Admin Frontend (React, built into a static bundle, served by `serve`) ────
+
+  admin-frontend:
+    build:
+      context: "./admin frontend/go-bus-admin"
+      dockerfile: Dockerfile
+      args:
+        # Baked into the React bundle at build time. MUST point at this VPS.
+        REACT_APP_BASE_URL: ${REACT_APP_BASE_URL}
+        REACT_APP_WS_URL: ${REACT_APP_WS_URL}
+    container_name: busapp-admin
+    restart: unless-stopped
+    networks:
+      - busapp-net
+
+  # ── Reverse Proxy (the only publicly exposed service) ───────────────────────
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: busapp-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - gateway-service
+      - admin-frontend
+    networks:
+      - busapp-net
+
+# ── Volumes & Networks ────────────────────────────────────────────────────────
+
+volumes:
+  postgres-data:
+    driver: local
+  rabbitmq-data:
+    driver: local
+  minio-data:
+    driver: local
+
+networks:
+  busapp-net:
+    driver: bridge

@@ -1,0 +1,77 @@
+# =============================================================================
+#  .gitignore — Go Bus Express (monorepo root)
+#  Sub-projects (backend/, admin frontend/) have their own .gitignore too.
+# =============================================================================
+
+# ── Secrets & environment ─────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+!.env.*.example
+production env.txt
+production env.md
+*.pem
+*.key
+
+# ── Python (payment-with-bakong) ──────────────────────────────────────────────
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+get-pip.py
+*.save
+
+# ── Node (admin frontend) ─────────────────────────────────────────────────────
+node_modules/
+.pnp
+.pnp.js
+
+# ── Java / Gradle (backend) ───────────────────────────────────────────────────
+.gradle/
+build/
+out/
+bin/
+*.class
+
+# ── Build output / bundles ────────────────────────────────────────────────────
+dist/
+coverage/
+
+# ── Archives & large binaries ─────────────────────────────────────────────────
+*.zip
+*.tar
+*.tar.gz
+
+# ── Git worktrees ─────────────────────────────────────────────────────────────
+*.worktrees/
+
+# ── IDE / editor ──────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.iml
+*.code-workspace
+
+# ── OS files ──────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ── Logs & runtime dumps ──────────────────────────────────────────────────────
+*.log
+logs/
+dump.rdb
+
+# ── Reports / generated test artifacts ────────────────────────────────────────
+*.xlsx
+test-results/
+
+# ── Documentation: ignore all markdown except README.md ───────────────────────
+*.md
+!README.md
+
+# =============================================================================
+#  Kept intentionally:
+#    README.md  project overview   *.jmx  JMeter load-test plans
+#    users.csv  JMeter dataset      .env.vps.example  deploy template
+# =============================================================================

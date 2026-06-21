@@ -1,0 +1,24 @@
+# Development Dockerfile for User Service
+# Standalone build - doesn't require root project
+
+FROM gradle:8.5-jdk17
+WORKDIR /app
+
+# Copy service-specific gradle files
+COPY go-bus-user-service/gradlew ./gradlew
+COPY go-bus-user-service/gradle ./gradle
+COPY go-bus-user-service/build.gradle ./build.gradle
+COPY go-bus-user-service/settings.gradle ./settings.gradle
+COPY go-bus-user-service/src ./src
+
+# Fix line endings and make gradlew executable (Windows compatibility)
+RUN sed -i 's/\r$//' gradlew && chmod +x gradlew
+
+# Download dependencies (cached layer)
+RUN ./gradlew dependencies --no-daemon || true
+
+# Expose port
+EXPOSE 8081
+
+# Run with hot reload
+CMD ["./gradlew", "bootRun", "--no-daemon"]

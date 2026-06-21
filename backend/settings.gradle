@@ -1,0 +1,7 @@
+rootProject.name = 'backend'
+
+include 'eureka-server'
+include 'gateway-service'
+include 'user-service'
+include 'bus-service'
+include 'booking-service'

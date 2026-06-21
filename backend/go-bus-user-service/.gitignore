@@ -1,0 +1,6 @@
+build/
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+.gradle/
+*.md
+application-dev.yml

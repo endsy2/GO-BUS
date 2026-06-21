@@ -1,0 +1,44 @@
+# Git attributes for line ending handling
+# Ensures consistent line endings across different operating systems
+
+# Auto detect text files and normalize line endings to LF on checkin
+* text=auto
+
+# Shell scripts should always use LF (Unix line endings)
+*.sh text eol=lf
+
+# Gradle wrapper should always use LF
+gradlew text eol=lf
+
+# Batch files should use CRLF (Windows line endings)
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# PowerShell scripts should use CRLF
+*.ps1 text eol=crlf
+
+# Explicitly declare text files
+*.java text
+*.xml text
+*.yml text
+*.yaml text
+*.properties text
+*.md text
+*.txt text
+*.json text
+
+# Declare files that will always have CRLF line endings on checkout
+*.sln text eol=crlf
+
+# Denote all files that are truly binary and should not be modified
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.jar binary
+*.war binary
+*.ear binary
+*.zip binary
+*.tar.gz binary
+*.pdf binary

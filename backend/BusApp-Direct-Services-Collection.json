@@ -1,0 +1,995 @@
+{
+  "info": {
+    "name": "BusApp Microservices — Direct Service URLs",
+    "_postman_id": "busapp-collection-direct-004",
+    "description": "All endpoints call services directly (bypassing the API Gateway). user-service=8081, bus-service=8082, booking-service=8083. Set access_token after Login/Register.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "user_service_url",    "value": "http://localhost:8081" },
+    { "key": "bus_service_url",     "value": "http://localhost:8082" },
+    { "key": "booking_service_url", "value": "http://localhost:8083" },
+    { "key": "access_token",        "value": "" },
+    { "key": "refresh_token",       "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+  },
+  "item": [
+
+    {
+      "name": "Auth  [user-service :8081]",
+      "item": [
+        {
+          "name": "Register",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "var j = pm.response.json();",
+                "if (j.data) {",
+                "  pm.collectionVariables.set('access_token',  j.data.accessToken);",
+                "  pm.collectionVariables.set('refresh_token', j.data.refreshToken);",
+                "}"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userName\": \"johndoe\",\n  \"fullName\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"phone\": \"012-345-6789\",\n  \"password\": \"password123\",\n  \"gender\": \"MALE\"\n}"
+            },
+            "url": { "raw": "{{user_service_url}}/api/auth/register", "host": ["{{user_service_url}}"], "path": ["api","auth","register"] }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "var j = pm.response.json();",
+                "if (j.data) {",
+                "  pm.collectionVariables.set('access_token',  j.data.accessToken);",
+                "  pm.collectionVariables.set('refresh_token', j.data.refreshToken);",
+                "}"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": { "raw": "{{user_service_url}}/api/auth/login", "host": ["{{user_service_url}}"], "path": ["api","auth","login"] }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "var j = pm.response.json();",
+                "if (j.data) {",
+                "  pm.collectionVariables.set('access_token',  j.data.accessToken);",
+                "  pm.collectionVariables.set('refresh_token', j.data.refreshToken);",
+                "}"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}" },
+            "url": { "raw": "{{user_service_url}}/api/auth/refresh", "host": ["{{user_service_url}}"], "path": ["api","auth","refresh"] }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}" },
+            "url": { "raw": "{{user_service_url}}/api/auth/logout", "host": ["{{user_service_url}}"], "path": ["api","auth","logout"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Users  [user-service :8081]",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{user_service_url}}/api/users", "host": ["{{user_service_url}}"], "path": ["api","users"] }
+          }
+        },
+        {
+          "name": "Get User By ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{user_service_url}}/api/users/1", "host": ["{{user_service_url}}"], "path": ["api","users","1"] }
+          }
+        },
+        {
+          "name": "Get User By Email",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{user_service_url}}/api/users/email/john@example.com", "host": ["{{user_service_url}}"], "path": ["api","users","email","john@example.com"] }
+          }
+        },
+        {
+          "name": "Get User By Phone",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{user_service_url}}/api/users/phone/012-345-6789", "host": ["{{user_service_url}}"], "path": ["api","users","phone","012-345-6789"] }
+          }
+        },
+        {
+          "name": "Get User By Google ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{user_service_url}}/api/users/google/google-uid-123", "host": ["{{user_service_url}}"], "path": ["api","users","google","google-uid-123"] }
+          }
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userName\": \"johndoe\",\n  \"fullName\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"phone\": \"012-345-6789\",\n  \"password\": \"password123\",\n  \"gender\": \"MALE\"\n}"
+            },
+            "url": { "raw": "{{user_service_url}}/api/users", "host": ["{{user_service_url}}"], "path": ["api","users"] }
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userName\": \"johndoe\",\n  \"fullName\": \"John Updated\",\n  \"email\": \"john@example.com\",\n  \"phone\": \"012-999-0000\",\n  \"password\": \"newpassword\",\n  \"gender\": \"MALE\"\n}"
+            },
+            "url": { "raw": "{{user_service_url}}/api/users/1", "host": ["{{user_service_url}}"], "path": ["api","users","1"] }
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{user_service_url}}/api/users/1", "host": ["{{user_service_url}}"], "path": ["api","users","1"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Buses  [bus-service :8082]",
+      "item": [
+        {
+          "name": "Get All Buses",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{bus_service_url}}/api/buses", "host": ["{{bus_service_url}}"], "path": ["api","buses"] }
+          }
+        },
+        {
+          "name": "Get Bus By ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{bus_service_url}}/api/buses/1", "host": ["{{bus_service_url}}"], "path": ["api","buses","1"] }
+          }
+        },
+        {
+          "name": "Get Buses By Route",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{bus_service_url}}/api/buses/route/1", "host": ["{{bus_service_url}}"], "path": ["api","buses","route","1"] }
+          }
+        },
+        {
+          "name": "Get Bus By Number",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{bus_service_url}}/api/buses/number/PP-001", "host": ["{{bus_service_url}}"], "path": ["api","buses","number","PP-001"] }
+          }
+        },
+        {
+          "name": "Get Buses By Route And Type",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{bus_service_url}}/api/buses/route/1/type/SLEEPER", "host": ["{{bus_service_url}}"], "path": ["api","buses","route","1","type","SLEEPER"] }
+          }
+        },
+        {
+          "name": "Create Bus",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"routeId\": 1,\n  \"busNumber\": \"PP-001\",\n  \"busType\": \"SLEEPER\",\n  \"totalSeats\": 40,\n  \"layoutId\": 1\n}" },
+            "url": { "raw": "{{bus_service_url}}/api/buses", "host": ["{{bus_service_url}}"], "path": ["api","buses"] }
+          }
+        },
+        {
+          "name": "Update Bus",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"routeId\": 1,\n  \"busNumber\": \"PP-001-UPDATED\",\n  \"busType\": \"VIP\",\n  \"totalSeats\": 36,\n  \"layoutId\": 1\n}" },
+            "url": { "raw": "{{bus_service_url}}/api/buses/1", "host": ["{{bus_service_url}}"], "path": ["api","buses","1"] }
+          }
+        },
+        {
+          "name": "Delete Bus",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{bus_service_url}}/api/buses/1", "host": ["{{bus_service_url}}"], "path": ["api","buses","1"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Routes  [bus-service :8082]",
+      "item": [
+        {
+          "name": "Get All Routes",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{bus_service_url}}/api/routes", "host": ["{{bus_service_url}}"], "path": ["api","routes"] }
+          }
+        },
+        {
+          "name": "Get Route By ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{bus_service_url}}/api/routes/1", "host": ["{{bus_service_url}}"], "path": ["api","routes","1"] }
+          }
+        },
+        {
+          "name": "Search Routes",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{bus_service_url}}/api/routes/search?origin=Phnom Penh&destination=Siem Reap",
+              "host": ["{{bus_service_url}}"],
+              "path": ["api","routes","search"],
+              "query": [
+                { "key": "origin",      "value": "Phnom Penh" },
+                { "key": "destination", "value": "Siem Reap" },
+                { "key": "origin",      "value": "Phnom",     "description": "Single keyword — destination omitted", "disabled": true },
+                { "key": "destination", "value": "Reap",      "description": "Single keyword — origin omitted",      "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Route",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origin\": \"Phnom Penh\",\n  \"destination\": \"Siem Reap\",\n  \"distanceKm\": 314.0,\n  \"durationMinutes\": 360,\n  \"location\": \"{\\\"lat\\\": 11.5564, \\\"lng\\\": 104.9282}\"\n}"
+            },
+            "url": { "raw": "{{bus_service_url}}/api/routes", "host": ["{{bus_service_url}}"], "path": ["api","routes"] }
+          }
+        },
+        {
+          "name": "Update Route",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origin\": \"Phnom Penh\",\n  \"destination\": \"Siem Reap\",\n  \"distanceKm\": 320.0,\n  \"durationMinutes\": 350,\n  \"location\": \"{\\\"lat\\\": 11.5564, \\\"lng\\\": 104.9282}\"\n}"
+            },
+            "url": { "raw": "{{bus_service_url}}/api/routes/1", "host": ["{{bus_service_url}}"], "path": ["api","routes","1"] }
+          }
+        },
+        {
+          "name": "Patch Route (Partial Update)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"distanceKm\": 330.0,\n  \"durationMinutes\": 340\n}"
+            },
+            "url": { "raw": "{{bus_service_url}}/api/routes/1", "host": ["{{bus_service_url}}"], "path": ["api","routes","1"] }
+          }
+        },
+        {
+          "name": "Delete Route",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{bus_service_url}}/api/routes/1", "host": ["{{bus_service_url}}"], "path": ["api","routes","1"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Layouts  [bus-service :8082]",
+      "item": [
+        {
+          "name": "Get All Layouts",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{bus_service_url}}/api/layouts", "host": ["{{bus_service_url}}"], "path": ["api","layouts"] }
+          }
+        },
+        {
+          "name": "Get Layout By ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{bus_service_url}}/api/layouts/1", "host": ["{{bus_service_url}}"], "path": ["api","layouts","1"] }
+          }
+        },
+        {
+          "name": "Get Layout By Name",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{bus_service_url}}/api/layouts/name/Standard 40-Seat", "host": ["{{bus_service_url}}"], "path": ["api","layouts","name","Standard 40-Seat"] }
+          }
+        },
+        {
+          "name": "Create Layout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Standard 40-Seat\",\n  \"layout\": \"[{\\\"row\\\":1,\\\"seats\\\":[\\\"A1\\\",\\\"A2\\\",\\\"A3\\\",\\\"A4\\\"]},{\\\"row\\\":2,\\\"seats\\\":[\\\"B1\\\",\\\"B2\\\",\\\"B3\\\",\\\"B4\\\"]}]\"\n}"
+            },
+            "url": { "raw": "{{bus_service_url}}/api/layouts", "host": ["{{bus_service_url}}"], "path": ["api","layouts"] }
+          }
+        },
+        {
+          "name": "Update Layout",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"VIP 36-Seat\",\n  \"layout\": \"[{\\\"row\\\":1,\\\"seats\\\":[\\\"A1\\\",\\\"A2\\\"]}]\"\n}"
+            },
+            "url": { "raw": "{{bus_service_url}}/api/layouts/1", "host": ["{{bus_service_url}}"], "path": ["api","layouts","1"] }
+          }
+        },
+        {
+          "name": "Delete Layout",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{bus_service_url}}/api/layouts/1", "host": ["{{bus_service_url}}"], "path": ["api","layouts","1"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Schedules  [bus-service :8082]",
+      "item": [
+        {
+          "name": "Get All Schedules",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{bus_service_url}}/api/schedules", "host": ["{{bus_service_url}}"], "path": ["api","schedules"] }
+          }
+        },
+        {
+          "name": "Get Schedule By ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{bus_service_url}}/api/schedules/1", "host": ["{{bus_service_url}}"], "path": ["api","schedules","1"] }
+          }
+        },
+        {
+          "name": "Get Schedules By Bus",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{bus_service_url}}/api/schedules/bus/1", "host": ["{{bus_service_url}}"], "path": ["api","schedules","bus","1"] }
+          }
+        },
+        {
+          "name": "Get Schedules By Date Range",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{bus_service_url}}/api/schedules/date-range?from=2026-03-01T00:00:00&to=2026-03-31T23:59:59",
+              "host": ["{{bus_service_url}}"],
+              "path": ["api","schedules","date-range"],
+              "query": [
+                { "key": "from", "value": "2026-03-01T00:00:00" },
+                { "key": "to",   "value": "2026-03-31T23:59:59" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Schedules By Bus And Date Range",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{bus_service_url}}/api/schedules/bus/1/date-range?from=2026-03-01T00:00:00&to=2026-03-31T23:59:59",
+              "host": ["{{bus_service_url}}"],
+              "path": ["api","schedules","bus","1","date-range"],
+              "query": [
+                { "key": "from", "value": "2026-03-01T00:00:00" },
+                { "key": "to",   "value": "2026-03-31T23:59:59" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Schedules By Max Price",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{bus_service_url}}/api/schedules/price?maxPrice=20",
+              "host": ["{{bus_service_url}}"],
+              "path": ["api","schedules","price"],
+              "query": [{ "key": "maxPrice", "value": "20" }]
+            }
+          }
+        },
+        {
+          "name": "Create Schedule",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"busId\": 1,\n  \"price\": 15.00,\n  \"departureDate\": \"2026-03-15T07:00:00\",\n  \"departureTime\": \"07:00\",\n  \"arrivalTime\": \"13:00\"\n}"
+            },
+            "url": { "raw": "{{bus_service_url}}/api/schedules", "host": ["{{bus_service_url}}"], "path": ["api","schedules"] }
+          }
+        },
+        {
+          "name": "Update Schedule",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"busId\": 1,\n  \"price\": 18.00,\n  \"departureDate\": \"2026-03-15T08:00:00\",\n  \"departureTime\": \"08:00\",\n  \"arrivalTime\": \"14:00\"\n}"
+            },
+            "url": { "raw": "{{bus_service_url}}/api/schedules/1", "host": ["{{bus_service_url}}"], "path": ["api","schedules","1"] }
+          }
+        },
+        {
+          "name": "Delete Schedule",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{bus_service_url}}/api/schedules/1", "host": ["{{bus_service_url}}"], "path": ["api","schedules","1"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Seats  [bus-service :8082]",
+      "item": [
+        {
+          "name": "Get Seats By Bus",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{bus_service_url}}/api/seats/bus/1", "host": ["{{bus_service_url}}"], "path": ["api","seats","bus","1"] }
+          }
+        },
+        {
+          "name": "Get Seat By ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{bus_service_url}}/api/seats/1", "host": ["{{bus_service_url}}"], "path": ["api","seats","1"] }
+          }
+        },
+        {
+          "name": "Get Seats By Status",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{bus_service_url}}/api/seats/bus/1/status/AVAILABLE", "host": ["{{bus_service_url}}"], "path": ["api","seats","bus","1","status","AVAILABLE"] }
+          }
+        },
+        {
+          "name": "Get Seats By Type",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{bus_service_url}}/api/seats/bus/1/type/VIP", "host": ["{{bus_service_url}}"], "path": ["api","seats","bus","1","type","VIP"] }
+          }
+        },
+        {
+          "name": "Get Seat By Number",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{bus_service_url}}/api/seats/bus/1/number/A1", "host": ["{{bus_service_url}}"], "path": ["api","seats","bus","1","number","A1"] }
+          }
+        },
+        {
+          "name": "Count Seats By Status",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{bus_service_url}}/api/seats/bus/1/count/AVAILABLE", "host": ["{{bus_service_url}}"], "path": ["api","seats","bus","1","count","AVAILABLE"] }
+          }
+        },
+        {
+          "name": "Create Seat",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"busId\": 1,\n  \"seatNumber\": \"A1\",\n  \"seatType\": \"WINDOW\",\n  \"positionLabel\": \"Row 1 Left\",\n  \"status\": \"AVAILABLE\"\n}"
+            },
+            "url": { "raw": "{{bus_service_url}}/api/seats", "host": ["{{bus_service_url}}"], "path": ["api","seats"] }
+          }
+        },
+        {
+          "name": "Bulk Create Seats",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  { \"busId\": 1, \"seatNumber\": \"A1\", \"seatType\": \"NORMAL\", \"positionLabel\": \"Row 1 Left\",  \"status\": \"AVAILABLE\" },\n  { \"busId\": 1, \"seatNumber\": \"A2\", \"seatType\": \"NORMAL\", \"positionLabel\": \"Row 1 Right\", \"status\": \"AVAILABLE\" },\n  { \"busId\": 1, \"seatNumber\": \"B1\", \"seatType\": \"VIP\",    \"positionLabel\": \"Row 2 Left\",  \"status\": \"AVAILABLE\" }\n]"
+            },
+            "url": { "raw": "{{bus_service_url}}/api/seats/bus/1/bulk", "host": ["{{bus_service_url}}"], "path": ["api","seats","bus","1","bulk"] }
+          }
+        },
+        {
+          "name": "Update Seat (Full)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"seatNumber\": \"A1-UPDATED\",\n  \"seatType\": \"VIP\",\n  \"positionLabel\": \"Row 1 Window\",\n  \"status\": \"AVAILABLE\"\n}"
+            },
+            "url": { "raw": "{{bus_service_url}}/api/seats/1", "host": ["{{bus_service_url}}"], "path": ["api","seats","1"] }
+          }
+        },
+        {
+          "name": "Update Seat Status",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"BOOKED\"\n}" },
+            "url": { "raw": "{{bus_service_url}}/api/seats/1/status", "host": ["{{bus_service_url}}"], "path": ["api","seats","1","status"] }
+          }
+        },
+        {
+          "name": "Delete Seat",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{bus_service_url}}/api/seats/1", "host": ["{{bus_service_url}}"], "path": ["api","seats","1"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Bookings  [booking-service :8083]",
+      "item": [
+        {
+          "name": "Get All Bookings",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{booking_service_url}}/api/bookings", "host": ["{{booking_service_url}}"], "path": ["api","bookings"] }
+          }
+        },
+        {
+          "name": "Get Booking Detail By ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{booking_service_url}}/api/bookings/1", "host": ["{{booking_service_url}}"], "path": ["api","bookings","1"] }
+          }
+        },
+        {
+          "name": "Get Bookings By User",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{booking_service_url}}/api/bookings/user/1", "host": ["{{booking_service_url}}"], "path": ["api","bookings","user","1"] }
+          }
+        },
+        {
+          "name": "Get Bookings By Schedule",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{booking_service_url}}/api/bookings/schedule/1", "host": ["{{booking_service_url}}"], "path": ["api","bookings","schedule","1"] }
+          }
+        },
+        {
+          "name": "Create Booking",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 1,\n  \"scheduleId\": 1,\n  \"seatIds\": [1, 2],\n  \"promoCode\": null,\n  \"paymentMethod\": \"WALLET\"\n}"
+            },
+            "url": { "raw": "{{booking_service_url}}/api/bookings", "host": ["{{booking_service_url}}"], "path": ["api","bookings"] }
+          }
+        },
+        {
+          "name": "Cancel Booking",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{booking_service_url}}/api/bookings/1/cancel", "host": ["{{booking_service_url}}"], "path": ["api","bookings","1","cancel"] }
+          }
+        },
+        {
+          "name": "Delete Booking",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{booking_service_url}}/api/bookings/1", "host": ["{{booking_service_url}}"], "path": ["api","bookings","1"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Payments  [booking-service :8083]",
+      "item": [
+        {
+          "name": "Get Payment By ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{booking_service_url}}/api/payments/1", "host": ["{{booking_service_url}}"], "path": ["api","payments","1"] }
+          }
+        },
+        {
+          "name": "Get Payments By Booking",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{booking_service_url}}/api/payments/booking/1", "host": ["{{booking_service_url}}"], "path": ["api","payments","booking","1"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Tickets  [booking-service :8083]",
+      "item": [
+        {
+          "name": "Get Ticket By ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{booking_service_url}}/api/tickets/1", "host": ["{{booking_service_url}}"], "path": ["api","tickets","1"] }
+          }
+        },
+        {
+          "name": "Get Tickets By Booking",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{booking_service_url}}/api/tickets/booking/1", "host": ["{{booking_service_url}}"], "path": ["api","tickets","booking","1"] }
+          }
+        },
+        {
+          "name": "Regenerate QR Code",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{booking_service_url}}/api/tickets/booking/1/regenerate", "host": ["{{booking_service_url}}"], "path": ["api","tickets","booking","1","regenerate"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Promo Codes  [booking-service :8083]",
+      "item": [
+        {
+          "name": "Get All Promos",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{booking_service_url}}/api/promos", "host": ["{{booking_service_url}}"], "path": ["api","promos"] }
+          }
+        },
+        {
+          "name": "Get Promo By ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{booking_service_url}}/api/promos/1", "host": ["{{booking_service_url}}"], "path": ["api","promos","1"] }
+          }
+        },
+        {
+          "name": "Get Promo By Code",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{booking_service_url}}/api/promos/code/SAVE20", "host": ["{{booking_service_url}}"], "path": ["api","promos","code","SAVE20"] }
+          }
+        },
+        {
+          "name": "Create Promo",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"SAVE20\",\n  \"description\": \"Save 20% on any booking\",\n  \"discountType\": \"PERCENTAGE\",\n  \"discountValue\": 20.0,\n  \"maxUses\": 100,\n  \"validFrom\": \"2026-03-01T00:00:00\",\n  \"validTo\": \"2026-12-31T23:59:59\",\n  \"status\": \"ACTIVE\"\n}"
+            },
+            "url": { "raw": "{{booking_service_url}}/api/promos", "host": ["{{booking_service_url}}"], "path": ["api","promos"] }
+          }
+        },
+        {
+          "name": "Update Promo",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"SAVE20\",\n  \"description\": \"Save 20% extended\",\n  \"discountType\": \"PERCENTAGE\",\n  \"discountValue\": 20.0,\n  \"maxUses\": 200,\n  \"validFrom\": \"2026-03-01T00:00:00\",\n  \"validTo\": \"2027-06-30T23:59:59\",\n  \"status\": \"ACTIVE\"\n}"
+            },
+            "url": { "raw": "{{booking_service_url}}/api/promos/1", "host": ["{{booking_service_url}}"], "path": ["api","promos","1"] }
+          }
+        },
+        {
+          "name": "Delete Promo",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{booking_service_url}}/api/promos/1", "host": ["{{booking_service_url}}"], "path": ["api","promos","1"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Admin — Users  [user-service :8081]",
+      "item": [
+        {
+          "name": "List Users (Filtered)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{user_service_url}}/api/admin/users?page=0&size=20",
+              "host": ["{{user_service_url}}"],
+              "path": ["api","admin","users"],
+              "query": [
+                { "key": "search",       "value": "",       "disabled": true },
+                { "key": "walletStatus", "value": "ACTIVE", "disabled": true },
+                { "key": "active",       "value": "true",   "disabled": true },
+                { "key": "page",         "value": "0" },
+                { "key": "size",         "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Admin User By ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{user_service_url}}/api/admin/users/1", "host": ["{{user_service_url}}"], "path": ["api","admin","users","1"] }
+          }
+        },
+        {
+          "name": "Set User Active/Inactive",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"active\": false\n}" },
+            "url": { "raw": "{{user_service_url}}/api/admin/users/1/status", "host": ["{{user_service_url}}"], "path": ["api","admin","users","1","status"] }
+          }
+        },
+        {
+          "name": "Reset User Password",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"newPassword\": \"adminReset123\"\n}" },
+            "url": { "raw": "{{user_service_url}}/api/admin/users/1/reset-password", "host": ["{{user_service_url}}"], "path": ["api","admin","users","1","reset-password"] }
+          }
+        },
+        {
+          "name": "Unlink Google Account",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{user_service_url}}/api/admin/users/1/unlink-google", "host": ["{{user_service_url}}"], "path": ["api","admin","users","1","unlink-google"] }
+          }
+        },
+        {
+          "name": "Assign Roles to User",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"roles\": [\"ROLE_ADMIN\", \"ROLE_USER\"]\n}" },
+            "url": { "raw": "{{user_service_url}}/api/admin/users/1/roles", "host": ["{{user_service_url}}"], "path": ["api","admin","users","1","roles"] }
+          }
+        },
+        {
+          "name": "Adjust Wallet Balance",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"amount\": 50.00,\n  \"operation\": \"ADD\",\n  \"reason\": \"Promotional credit\"\n}" },
+            "url": { "raw": "{{user_service_url}}/api/admin/users/1/wallet/adjust", "host": ["{{user_service_url}}"], "path": ["api","admin","users","1","wallet","adjust"] }
+          }
+        },
+        {
+          "name": "Set Wallet Status",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{user_service_url}}/api/admin/users/1/wallet/status?status=FROZEN",
+              "host": ["{{user_service_url}}"],
+              "path": ["api","admin","users","1","wallet","status"],
+              "query": [{ "key": "status", "value": "FROZEN" }]
+            }
+          }
+        },
+        {
+          "name": "Delete User (Admin)",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{user_service_url}}/api/admin/users/1", "host": ["{{user_service_url}}"], "path": ["api","admin","users","1"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Admin — Roles  [user-service :8081]",
+      "item": [
+        {
+          "name": "Get All Roles",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{user_service_url}}/api/admin/roles", "host": ["{{user_service_url}}"], "path": ["api","admin","roles"] }
+          }
+        },
+        {
+          "name": "Get Role By ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{user_service_url}}/api/admin/roles/1", "host": ["{{user_service_url}}"], "path": ["api","admin","roles","1"] }
+          }
+        },
+        {
+          "name": "Create Role",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"ROLE_ADMIN\",\n  \"description\": \"Full system administrator\",\n  \"permissions\": [\"USER_READ\", \"USER_WRITE\", \"USER_DELETE\", \"BUS_READ\", \"BUS_WRITE\", \"BUS_DELETE\", \"BOOKING_READ\", \"BOOKING_WRITE\", \"BOOKING_DELETE\", \"ADMIN_ACCESS\"]\n}"
+            },
+            "url": { "raw": "{{user_service_url}}/api/admin/roles", "host": ["{{user_service_url}}"], "path": ["api","admin","roles"] }
+          }
+        },
+        {
+          "name": "Update Role",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"ROLE_ADMIN\",\n  \"description\": \"Full system administrator updated\",\n  \"permissions\": [\"ADMIN_ACCESS\"]\n}"
+            },
+            "url": { "raw": "{{user_service_url}}/api/admin/roles/1", "host": ["{{user_service_url}}"], "path": ["api","admin","roles","1"] }
+          }
+        },
+        {
+          "name": "Delete Role",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{user_service_url}}/api/admin/roles/1", "host": ["{{user_service_url}}"], "path": ["api","admin","roles","1"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Admin — Permissions  [user-service :8081]",
+      "item": [
+        {
+          "name": "Get All Permissions",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{user_service_url}}/api/admin/permissions", "host": ["{{user_service_url}}"], "path": ["api","admin","permissions"] }
+          }
+        },
+        {
+          "name": "Get Permission By ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{user_service_url}}/api/admin/permissions/1", "host": ["{{user_service_url}}"], "path": ["api","admin","permissions","1"] }
+          }
+        },
+        {
+          "name": "Create Permission",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"ADMIN_ACCESS\",\n  \"description\": \"Unrestricted admin access to all resources\"\n}" },
+            "url": { "raw": "{{user_service_url}}/api/admin/permissions", "host": ["{{user_service_url}}"], "path": ["api","admin","permissions"] }
+          }
+        },
+        {
+          "name": "Update Permission",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"ADMIN_ACCESS\",\n  \"description\": \"Updated description\"\n}" },
+            "url": { "raw": "{{user_service_url}}/api/admin/permissions/1", "host": ["{{user_service_url}}"], "path": ["api","admin","permissions","1"] }
+          }
+        },
+        {
+          "name": "Delete Permission",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{user_service_url}}/api/admin/permissions/1", "host": ["{{user_service_url}}"], "path": ["api","admin","permissions","1"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Admin — Bookings  [booking-service :8083]",
+      "item": [
+        {
+          "name": "List Bookings (Filtered)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{booking_service_url}}/api/admin/bookings?page=0&size=20",
+              "host": ["{{booking_service_url}}"],
+              "path": ["api","admin","bookings"],
+              "query": [
+                { "key": "userId",        "value": "1",       "disabled": true },
+                { "key": "scheduleId",    "value": "1",       "disabled": true },
+                { "key": "bookingStatus", "value": "PENDING", "disabled": true },
+                { "key": "paymentStatus", "value": "PENDING", "disabled": true },
+                { "key": "page",          "value": "0" },
+                { "key": "size",          "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Confirm Booking",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{booking_service_url}}/api/admin/bookings/1/confirm", "host": ["{{booking_service_url}}"], "path": ["api","admin","bookings","1","confirm"] }
+          }
+        },
+        {
+          "name": "Cancel Booking (Admin)",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{booking_service_url}}/api/admin/bookings/1/cancel", "host": ["{{booking_service_url}}"], "path": ["api","admin","bookings","1","cancel"] }
+          }
+        },
+        {
+          "name": "Force Mark Paid",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{booking_service_url}}/api/admin/bookings/1/force-pay", "host": ["{{booking_service_url}}"], "path": ["api","admin","bookings","1","force-pay"] }
+          }
+        },
+        {
+          "name": "Delete Booking (Admin)",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{booking_service_url}}/api/admin/bookings/1", "host": ["{{booking_service_url}}"], "path": ["api","admin","bookings","1"] }
+          }
+        }
+      ]
+    }
+
+  ]
+}

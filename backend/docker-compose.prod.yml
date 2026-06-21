@@ -1,0 +1,219 @@
+version: '3.8'
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  BusApp – Production Compose  (uses pre-built Docker Hub images)
+#
+#  Usage:
+#      pull-run.bat <dockerhub-user> <tag>
+#  Or manually:
+#      docker compose -f docker-compose.prod.yml --env-file .env up -d
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── Infrastructure ───────────────────────────────────────────────────────────
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: busapp-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-busbooking}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d busbooking"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - busapp-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: busapp-redis
+    command: >
+      sh -c '
+        if [ -n "$$REDIS_PASSWORD" ]; then
+          redis-server --requirepass "$$REDIS_PASSWORD"
+        else
+          redis-server
+        fi
+      '
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - busapp-net
+
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: busapp-redisinsight
+    ports:
+      - "5540:5540"
+    volumes:
+      - redisinsight-data:/data
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - busapp-net
+
+  # ── Service Discovery ────────────────────────────────────────────────────────
+
+  eureka-server:
+    image: ${DOCKER_HUB_USER}/busapp-eureka-server:${TAG:-latest}
+    container_name: busapp-eureka
+    ports:
+      - "8761:8761"
+    environment:
+      - EUREKA_INSTANCE_HOSTNAME=eureka-server
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - busapp-net
+
+  # ── Microservices ────────────────────────────────────────────────────────────
+
+  user-service:
+    image: ${DOCKER_HUB_USER}/busapp-user-service:${TAG:-latest}
+    container_name: busapp-user
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-busbooking}?sslmode=require&sslchannelbinding=require
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-postgres}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - EUREKA_HOST=eureka-server
+      - EUREKA_PORT=8761
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=${REDIS_PORT:-6379}
+      - SPRING_DATA_REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - JWT_PRIVATE_KEY=${JWT_PRIVATE_KEY}
+      - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY}
+      - JWT_ACCESS_EXPIRY=${JWT_ACCESS_EXPIRY:-900000}
+      - JWT_REFRESH_EXPIRY=${JWT_REFRESH_EXPIRY:-604800000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    networks:
+      - busapp-net
+
+  bus-service:
+    image: ${DOCKER_HUB_USER}/busapp-bus-service:${TAG:-latest}
+    container_name: busapp-bus
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-busbooking}?sslmode=require&sslchannelbinding=require
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-postgres}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - EUREKA_HOST=eureka-server
+      - EUREKA_PORT=8761
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    networks:
+      - busapp-net
+
+  booking-service:
+    image: ${DOCKER_HUB_USER}/busapp-booking-service:${TAG:-latest}
+    container_name: busapp-booking
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-busbooking}?sslmode=require&sslchannelbinding=require
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-postgres}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - EUREKA_HOST=eureka-server
+      - EUREKA_PORT=8761
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    networks:
+      - busapp-net
+
+  # ── API Gateway ──────────────────────────────────────────────────────────────
+
+  gateway-service:
+    image: ${DOCKER_HUB_USER}/busapp-gateway-service:${TAG:-latest}
+    container_name: busapp-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - EUREKA_HOST=eureka-server
+      - EUREKA_PORT=8761
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=${REDIS_PORT:-6379}
+      - SPRING_DATA_REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY}
+    depends_on:
+      redis:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+      bus-service:
+        condition: service_healthy
+      booking-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    networks:
+      - busapp-net
+
+# ── Volumes & Networks ────────────────────────────────────────────────────────
+
+volumes:
+  postgres-data:
+    driver: local
+  redisinsight-data:
+    driver: local
+
+networks:
+  busapp-net:
+    driver: bridge

@@ -1,0 +1,27 @@
+# Development Dockerfile for Bus Service
+# Optimized for fast rebuilds and development
+
+FROM gradle:8.5-jdk17
+WORKDIR /app
+
+# Copy gradle wrapper and build files
+COPY gradlew gradlew
+COPY gradle gradle
+COPY build.gradle build.gradle
+COPY settings.gradle settings.gradle
+
+# Copy service files
+COPY go-bus-bus-service/build.gradle go-bus-bus-service/build.gradle
+COPY go-bus-bus-service/src go-bus-bus-service/src
+
+# Make gradlew executable
+RUN chmod +x gradlew
+
+# Download dependencies (cached layer)
+RUN ./gradlew :go-bus-bus-service:dependencies --no-daemon || true
+
+# Expose port
+EXPOSE 8082
+
+# Run with hot reload
+CMD ["./gradlew", ":go-bus-bus-service:bootRun", "--no-daemon"]

@@ -1,0 +1,65 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: bus-service
+  datasource:
+#    url: jdbc:postgresql://${POSTGRES_HOST:ep-dry-flower-a1e2sv79-pooler.ap-southeast-1.aws.neon.tech}:${POSTGRES_PORT:5432}/${POSTGRES_DB:neondb}?sslmode=${PGSSLMODE:require}&sslchannelbinding=${PGCHANNELBINDING:require}
+    url: jdbc:postgresql://${POSTGRES_HOST:yamabiko.proxy.rlwy.net}:${POSTGRES_PORT:54188}/${POSTGRES_DB:railway}
+    driver-class-name: org.postgresql.Driver
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:mHKXnSqKeHzmLEpoVvmeVnUETNvBlGfO}
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
+        hbm2ddl:
+          create_namespaces: true
+        default_schema: bus_service
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${EUREKA_HOST:localhost}:${EUREKA_PORT:8761}/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+
+# Feign client configuration
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: BASIC
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    root: INFO
+    com.busapp.busservice: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.data.jpa: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN   # was TRACE — logged every bound param value (sensitive data + overhead)
+
+
+# ── Seat Selection Configuration ──────────────────────────────────────────────
+seat:
+  selection:
+    timeout-minutes: 5  # Auto-release pending seats after 5 minutes
