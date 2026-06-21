@@ -170,7 +170,6 @@ Deployment order: PostgreSQL / Redis / RabbitMQ / MinIO → Eureka → User / Bu
 ## Documentation
 
 - `PROJECT_OVERVIEW_FOR_THESIS.md` — long-form architecture and design write-up.
-- `CLAUDE.md` — developer/contributor guide to the codebase and conventions.
 - Each sub-project has its own `CLAUDE.md` with build commands and architecture notes.
 
 ---
