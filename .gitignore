@@ -75,3 +75,6 @@ test-results/
 #    README.md  project overview   *.jmx  JMeter load-test plans
 #    users.csv  JMeter dataset      .env.vps.example  deploy template
 # =============================================================================
+
+*.jmx
+users.csv

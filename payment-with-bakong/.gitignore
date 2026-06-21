@@ -1,0 +1,7 @@
+# Virtual environment
+_pycahe
+*.pyc
+.idea/
+.env
+venv/
+.venv/
