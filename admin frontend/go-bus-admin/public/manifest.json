@@ -1,0 +1,15 @@
+{
+  "short_name": "GoBus Admin",
+  "name": "GoBus Admin - Modern Bus Management System",
+  "icons": [
+    {
+      "src": "Blue%20Minimal%20Idea%20Free%20Education%20Logo.png",
+      "type": "image/png",
+      "sizes": "any"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}

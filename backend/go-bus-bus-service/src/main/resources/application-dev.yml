@@ -5,11 +5,10 @@ spring:
   application:
     name: bus-service
   datasource:
-#    url: jdbc:postgresql://${POSTGRES_HOST:ep-dry-flower-a1e2sv79-pooler.ap-southeast-1.aws.neon.tech}:${POSTGRES_PORT:5432}/${POSTGRES_DB:neondb}?sslmode=${PGSSLMODE:require}&sslchannelbinding=${PGCHANNELBINDING:require}
-    url: jdbc:postgresql://${POSTGRES_HOST:yamabiko.proxy.rlwy.net}:${POSTGRES_PORT:54188}/${POSTGRES_DB:railway}
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:postgres}
     driver-class-name: org.postgresql.Driver
     username: ${POSTGRES_USER:postgres}
-    password: ${POSTGRES_PASSWORD:mHKXnSqKeHzmLEpoVvmeVnUETNvBlGfO}
+    password: ${POSTGRES_PASSWORD:postgres}
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:

@@ -1,0 +1,162 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <!-- Participant Headers -->
+    <mxCell id="2" value="Client" style="shape=mxgraph.uml.lifeline;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+      <mxGeometry x="60" y="40" width="100" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="3" value="AuthService" style="shape=mxgraph.uml.lifeline;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+      <mxGeometry x="240" y="40" width="120" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="4" value="UserRepository" style="shape=mxgraph.uml.lifeline;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+      <mxGeometry x="450" y="40" width="120" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="5" value="LdapService" style="shape=mxgraph.uml.lifeline;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d6b656;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+      <mxGeometry x="660" y="40" width="120" height="40" as="geometry" />
+    </mxCell>
+    <mxCell id="6" value="Redis" style="shape=mxgraph.uml.lifeline;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+      <mxGeometry x="870" y="40" width="100" height="40" as="geometry" />
+    </mxCell>
+
+    <!-- Lifelines -->
+    <mxCell id="7" value="" style="endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry x="110" y="80" relative="1" as="geometry"><Array as="points"/><mxPoint x="110" y="900" as="targetPoint"/><mxPoint x="110" y="80" as="sourcePoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="8" value="" style="endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry x="300" y="80" relative="1" as="geometry"><Array as="points"/><mxPoint x="300" y="900" as="targetPoint"/><mxPoint x="300" y="80" as="sourcePoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="9" value="" style="endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry x="510" y="80" relative="1" as="geometry"><Array as="points"/><mxPoint x="510" y="900" as="targetPoint"/><mxPoint x="510" y="80" as="sourcePoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="10" value="" style="endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry x="720" y="80" relative="1" as="geometry"><Array as="points"/><mxPoint x="720" y="900" as="targetPoint"/><mxPoint x="720" y="80" as="sourcePoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="11" value="" style="endArrow=none;dashed=1;strokeColor=#999999;" edge="1" parent="1">
+      <mxGeometry x="920" y="80" relative="1" as="geometry"><Array as="points"/><mxPoint x="920" y="900" as="targetPoint"/><mxPoint x="920" y="80" as="sourcePoint"/></mxGeometry>
+    </mxCell>
+
+    <!-- Activation bar on AuthService -->
+    <mxCell id="12" value="" style="fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="294" y="110" width="12" height="720" as="geometry" />
+    </mxCell>
+
+    <!-- Step 1: login() -->
+    <mxCell id="13" value="login(username, password)" style="endArrow=block;endFill=1;strokeColor=#555555;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="110" y="120" as="sourcePoint"/><mxPoint x="294" y="120" as="targetPoint"/></mxGeometry>
+    </mxCell>
+
+    <!-- Step 2: findByUsername -->
+    <mxCell id="14" value="findByUsername()" style="endArrow=block;endFill=1;strokeColor=#555555;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="306" y="160" as="sourcePoint"/><mxPoint x="510" y="160" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="15" value="AppUser / 404" style="endArrow=open;endFill=0;dashed=1;strokeColor=#555555;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="510" y="185" as="sourcePoint"/><mxPoint x="306" y="185" as="targetPoint"/></mxGeometry>
+    </mxCell>
+
+    <!-- ALT: disabled -->
+    <mxCell id="16" value="alt [user disabled]" style="shape=table;startSize=20;container=1;collapsible=0;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=left;strokeColor=#AE4132;fillColor=#f8cecc;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="200" y="200" width="680" height="35" as="geometry" />
+    </mxCell>
+    <mxCell id="17" value="[disabled] → throw InvalidCredentialException 401" style="text;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontColor=#AE4132;" vertex="1" parent="16">
+      <mxGeometry x="10" y="10" width="660" height="15" as="geometry" />
+    </mxCell>
+
+    <!-- ALT: non-AD vs AD -->
+    <mxCell id="18" value="alt [isAd = false] local auth" style="shape=table;startSize=20;container=1;collapsible=0;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=left;strokeColor=#666666;fillColor=#f5f5f5;fontColor=#333333;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="200" y="250" width="680" height="180" as="geometry" />
+    </mxCell>
+
+    <!-- passwordEncoder.matches self-call -->
+    <mxCell id="20" value="passwordEncoder.matches()" style="endArrow=block;endFill=1;strokeColor=#555555;exitX=1;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="340" y="285"/><mxPoint x="360" y="285"/><mxPoint x="360" y="315"/><mxPoint x="340" y="315"/></Array>
+        <mxPoint x="306" y="285" as="sourcePoint"/>
+        <mxPoint x="306" y="315" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+
+    <mxCell id="21" value="[mismatch] → throw InvalidCredentialException 401" style="text;strokeColor=#AE4132;fillColor=#f8cecc;align=center;verticalAlign=middle;fontSize=11;fontColor=#AE4132;" vertex="1" parent="1">
+      <mxGeometry x="210" y="325" width="660" height="25" as="geometry" />
+    </mxCell>
+
+    <!-- divider -->
+    <mxCell id="22" value="" style="endArrow=none;dashed=1;strokeColor=#AAAAAA;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="200" y="360" as="sourcePoint"/><mxPoint x="880" y="360" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="23" value="[isAd = true] AD auth" style="text;strokeColor=none;fillColor=none;align=left;fontSize=11;fontColor=#555555;" vertex="1" parent="1">
+      <mxGeometry x="210" y="362" width="200" height="15" as="geometry" />
+    </mxCell>
+
+    <!-- LDAP authenticate -->
+    <mxCell id="24" value="authenticate(username, password)" style="endArrow=block;endFill=1;strokeColor=#555555;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="306" y="385" as="sourcePoint"/><mxPoint x="720" y="385" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="25" value="true / false" style="endArrow=open;endFill=0;dashed=1;strokeColor=#555555;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="720" y="405" as="sourcePoint"/><mxPoint x="306" y="405" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="26" value="[false] → throw InvalidCredentialException 401" style="text;strokeColor=#AE4132;fillColor=#f8cecc;align=center;verticalAlign=middle;fontSize=11;fontColor=#AE4132;" vertex="1" parent="1">
+      <mxGeometry x="210" y="415" width="660" height="25" as="geometry" />
+    </mxCell>
+
+    <!-- Internal self-calls -->
+    <mxCell id="27" value="Internal processing" style="text;strokeColor=none;fillColor=none;align=center;fontSize=11;fontColor=#888888;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="220" y="452" width="160" height="15" as="geometry" />
+    </mxCell>
+
+    <mxCell id="28" value="collect active roles &amp; permissions" style="endArrow=block;endFill=1;strokeColor=#555555;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="340" y="475"/><mxPoint x="360" y="475"/><mxPoint x="360" y="500"/><mxPoint x="340" y="500"/></Array>
+        <mxPoint x="306" y="475" as="sourcePoint"/>
+        <mxPoint x="306" y="500" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+
+    <mxCell id="29" value="jwtUtil.generateAccessToken()" style="endArrow=block;endFill=1;strokeColor=#555555;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="340" y="520"/><mxPoint x="360" y="520"/><mxPoint x="360" y="545"/><mxPoint x="340" y="545"/></Array>
+        <mxPoint x="306" y="520" as="sourcePoint"/>
+        <mxPoint x="306" y="545" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+
+    <mxCell id="30" value="jwtUtil.generateRefreshToken()" style="endArrow=block;endFill=1;strokeColor=#555555;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points"><mxPoint x="340" y="565"/><mxPoint x="360" y="565"/><mxPoint x="360" y="590"/><mxPoint x="340" y="590"/></Array>
+        <mxPoint x="306" y="565" as="sourcePoint"/>
+        <mxPoint x="306" y="590" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- Redis evict -->
+    <mxCell id="31" value="Evict existing session" style="text;strokeColor=none;fillColor=none;align=center;fontSize=11;fontColor=#888888;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="220" y="602" width="200" height="15" as="geometry" />
+    </mxCell>
+
+    <mxCell id="32" value="deleteAccessToken(userId)" style="endArrow=block;endFill=1;strokeColor=#555555;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="306" y="625" as="sourcePoint"/><mxPoint x="920" y="625" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="33" value="deleteRefreshToken(userId)" style="endArrow=block;endFill=1;strokeColor=#555555;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="306" y="650" as="sourcePoint"/><mxPoint x="920" y="650" as="targetPoint"/></mxGeometry>
+    </mxCell>
+
+    <!-- Redis save -->
+    <mxCell id="34" value="Persist new session" style="text;strokeColor=none;fillColor=none;align=center;fontSize=11;fontColor=#888888;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="220" y="662" width="200" height="15" as="geometry" />
+    </mxCell>
+
+    <mxCell id="35" value="saveAccessToken(token, userId)" style="endArrow=block;endFill=1;strokeColor=#555555;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="306" y="685" as="sourcePoint"/><mxPoint x="920" y="685" as="targetPoint"/></mxGeometry>
+    </mxCell>
+    <mxCell id="36" value="saveRefreshToken(userId, token, 7d)" style="endArrow=block;endFill=1;strokeColor=#555555;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="306" y="710" as="sourcePoint"/><mxPoint x="920" y="710" as="targetPoint"/></mxGeometry>
+    </mxCell>
+
+    <!-- Return LoginResponse -->
+    <mxCell id="37" value="LoginResponse { accessToken, refreshToken }" style="endArrow=open;endFill=0;dashed=1;strokeColor=#555555;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="294" y="745" as="sourcePoint"/><mxPoint x="110" y="745" as="targetPoint"/></mxGeometry>
+    </mxCell>
+
+  </root>
+</mxGraphModel>
