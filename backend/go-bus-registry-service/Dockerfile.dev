@@ -17,6 +17,8 @@ RUN sed -i 's/\r$//' gradlew && chmod +x gradlew
 # Download dependencies (cached layer)
 RUN ./gradlew dependencies --no-daemon || true
 
+RUN gradle build -x test --no-daemon
+
 # Expose port
 EXPOSE 8761
 

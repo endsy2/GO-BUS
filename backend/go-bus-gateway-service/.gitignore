@@ -2,4 +2,4 @@ build/
 *.jar
 .gradle/
 logs
-!gradle\wrapper\gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.jar

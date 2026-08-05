@@ -17,7 +17,6 @@ public.pem
 !**/src/main/**/build/
 !**/src/test/**/build/
 gradle-app.setting
-!gradle-wrapper.jar
 .gradletasknamecache
 local.properties
 
@@ -27,6 +26,11 @@ local.properties
 *.war
 *.ear
 *.nar
+
+# The Gradle wrapper jar MUST be committed — `./gradlew` cannot start without it
+# and every Dockerfile builds via the wrapper. This negation has to stay *after*
+# `*.jar` above: in .gitignore the last matching rule wins.
+!**/gradle/wrapper/gradle-wrapper.jar
 
 # ── Logs ──────────────────────────────────────────────────────────────────────
 *.log
