@@ -1,3 +1,13 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  API Gateway — shared settings (every environment)
+#
+#  Environment-specific settings live in:
+#    application-dev.yml    local development  (the default profile)
+#    application-prod.yml   production         (SPRING_PROFILES_ACTIVE=prod)
+#
+#  Routes are defined ONCE here, so dev and prod always expose the same paths.
+#  Only the downstream addresses (downstream.*) change per environment.
+# ─────────────────────────────────────────────────────────────────────────────
 server:
   port: ${PORT:8080}
 
@@ -12,11 +22,11 @@ cors:
 spring:
   application:
     name: gateway-service
+  profiles:
+    # Used only when SPRING_PROFILES_ACTIVE is not set (e.g. running from the IDE)
+    default: dev
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
       timeout: 2000ms
   cloud:
     gateway:
@@ -33,11 +43,79 @@ spring:
         locator:
           enabled: false
           lower-case-service-id: true
-      # Explicit named routes (preferred for production)
       routes:
+        # ── Bakong Top-Up (5-minute payment polling) ─────────────────────────
+        - id: bakong-topup-service
+          uri: ${downstream.user-service}
+          predicates:
+            - Path=/api/topups/bakong/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: bakongServiceCB
+                fallbackUri: forward:/fallback/user-service
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE,GATEWAY_TIMEOUT
+                methods: GET,POST,PUT,DELETE
+                backoff:
+                  firstBackoff: 50ms
+                  maxBackoff: 500ms
+                  factor: 2
+                  basedOnPreviousValue: false
+
+        # ── Bakong Booking Payment (5-minute payment polling) ────────────────
+        - id: bakong-booking-service
+          uri: ${downstream.booking-service}
+          predicates:
+            - Path=/api/payments/bakong/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: bakongServiceCB
+                fallbackUri: forward:/fallback/booking-service
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE,GATEWAY_TIMEOUT
+                methods: GET,POST,PUT,DELETE
+                backoff:
+                  firstBackoff: 50ms
+                  maxBackoff: 500ms
+                  factor: 2
+                  basedOnPreviousValue: false
+
+        # ── WebSocket Routes ────────────────────────────────────────────────
+        # IMPORTANT: WebSocket routes must come BEFORE HTTP routes to match correctly
+
+        # Bus Service WebSocket - All SockJS endpoints
+        - id: bus-websocket
+          uri: ${downstream.bus-service-ws}
+          predicates:
+            - Path=/bus-service/ws/bus/**
+          filters:
+            - RewritePath=/bus-service/ws/bus/(?<segment>.*), /ws/bus/$\{segment}
+
+        # Booking Service WebSocket - All SockJS endpoints
+        - id: booking-websocket
+          uri: ${downstream.booking-service-ws}
+          predicates:
+            - Path=/booking-service/ws/booking/**
+          filters:
+            - RewritePath=/booking-service/ws/booking/(?<segment>.*), /ws/booking/$\{segment}
+
+        # Admin Dashboard WebSocket
+        - id: admin-dashboard-websocket
+          uri: ${downstream.booking-service-ws}
+          predicates:
+            - Path=/admin/ws/dashboard/**
+          filters:
+            - RewritePath=/admin/ws/dashboard/(?<segment>.*), /ws/booking/$\{segment}
+
         # ── Auth (public — no JWT required) ───────────────────────────────────
         - id: auth-service
-          uri: ${USER_SERVICE_URL:http://localhost:8081}
+          uri: ${downstream.user-service}
           predicates:
             - Path=/api/auth/**
           filters:
@@ -58,9 +136,9 @@ spring:
 
         # ── Admin — User Service ───────────────────────────────────────────────
         - id: admin-user-service
-          uri: ${USER_SERVICE_URL:http://localhost:8081}
+          uri: ${downstream.user-service}
           predicates:
-            - Path=/api/admin/users/**,/api/admin/roles/**,/api/admin/permissions/**
+            - Path=/api/admin/users/**,/api/admin/roles/**,/api/admin/permissions/**,/api/admin/reports-customer/**,/api/admin/wallets/**
           filters:
             - name: CircuitBreaker
               args:
@@ -77,28 +155,9 @@ spring:
                   factor: 2
                   basedOnPreviousValue: false
 
-        # ── Bakong Top-Up (needs 5-minute timeout for payment processing) ──────
-        - id: bakong-topup-service
-          uri: ${USER_SERVICE_URL:http://localhost:8081}
-          predicates:
-            - Path=/api/wallets/top-up/bakong/**
-          filters:
-            - name: CircuitBreaker
-              args:
-                name: bakongTopUpCB
-                fallbackUri: forward:/fallback/user-service
-            - name: Retry
-              args:
-                retries: 3  # Don't retry long-running requests (5 min)
-                statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
-                methods: POST
-          metadata:
-            response-timeout: 310000  # 5 minutes + 10 seconds (milliseconds)
-            connect-timeout: 5000      # 5 seconds (milliseconds)
-
         # ── User Service ───────────────────────────────────────────────────────
         - id: user-service
-          uri: ${USER_SERVICE_URL:http://localhost:8081}
+          uri: ${downstream.user-service}
           predicates:
             - Path=/api/users/**,/api/wallet/**,/api/wallets/**,/api/notifications/**,/api/topups/**,/api/preferences/**,/api/profile/**
           filters:
@@ -116,11 +175,12 @@ spring:
                   maxBackoff: 500ms
                   factor: 2
                   basedOnPreviousValue: false
+
         # ── Bus Service ────────────────────────────────────────────────────────
         - id: bus-service
-          uri: ${BUS_SERVICE_URL:http://localhost:8082}
+          uri: ${downstream.bus-service}
           predicates:
-            - Path=/api/buses/**,/api/routes/**,/api/layouts/**,/api/schedules/**,/api/seats/**
+            - Path=/api/buses/**,/api/routes/**,/api/layouts/**,/api/schedules/**,/api/seats/**,/api/schedule-seats/**
           filters:
             - name: CircuitBreaker
               args:
@@ -136,9 +196,31 @@ spring:
                   maxBackoff: 500ms
                   factor: 2
                   basedOnPreviousValue: false
+
+        # ── Admin — Bus Service ────────────────────────────────────────────────
+        - id: admin-bus-service
+          uri: ${downstream.bus-service}
+          predicates:
+            - Path=/api/admin/reports-bus/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: busServiceCB
+                fallbackUri: forward:/fallback/bus-service
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE,GATEWAY_TIMEOUT
+                methods: GET,POST,PUT,DELETE
+                backoff:
+                  firstBackoff: 50ms
+                  maxBackoff: 500ms
+                  factor: 2
+                  basedOnPreviousValue: false
+
         # ── Admin — Booking Service ────────────────────────────────────────────
         - id: admin-booking-service
-          uri: ${BOOKING_SERVICE_URL:http://localhost:8083}
+          uri: ${downstream.booking-service}
           predicates:
             - Path=/api/admin/bookings/**,/api/admin/reports-operation/**,/api/admin/financial-reports/**,/api/admin/dashboard/**,/api/admin/refunds/**
           filters:
@@ -159,9 +241,9 @@ spring:
 
         # ── Booking Service ────────────────────────────────────────────────────
         - id: booking-service
-          uri: ${BOOKING_SERVICE_URL:http://localhost:8083}
+          uri: ${downstream.booking-service}
           predicates:
-            - Path=/api/bookings/**,/api/payments/**,/api/tickets/**,/api/promos/**,/api/bakong/**
+            - Path=/api/bookings/**,/api/payments/**,/api/tickets/**,/api/promos/**,/api/refunds/**
           filters:
             - name: CircuitBreaker
               args:
@@ -178,63 +260,17 @@ spring:
                   factor: 2
                   basedOnPreviousValue: false
 
-        # ── WebSocket Routes ────────────────────────────────────────────────
-        # IMPORTANT: WebSocket routes must come BEFORE HTTP routes to match correctly
-        
-        # Bus Service WebSocket - All SockJS endpoints
-        - id: bus-websocket
-          uri: ${BUS_SERVICE_WS_URL:ws://localhost:8082}
-          predicates:
-            - Path=/bus-service/ws/bus/**
-          filters:
-            - RewritePath=/bus-service/ws/bus/(?<segment>.*), /ws/bus/$\{segment}
-
-        # Booking Service WebSocket - All SockJS endpoints
-        - id: booking-websocket
-          uri: ${BOOKING_SERVICE_WS_URL:ws://localhost:8083}
-          predicates:
-            - Path=/booking-service/ws/booking/**
-          filters:
-            - RewritePath=/booking-service/ws/booking/(?<segment>.*), /ws/booking/$\{segment}
-
-        # Admin Dashboard WebSocket
-        - id: admin-dashboard-websocket
-          uri: ${BOOKING_SERVICE_WS_URL:ws://localhost:8083}
-          predicates:
-            - Path=/admin/ws/dashboard/**
-          filters:
-            - RewritePath=/admin/ws/dashboard/(?<segment>.*), /ws/booking/$\{segment}
-  profiles:
-    active: dev
-
-
-# ── JWT Configuration ──────────────────────────────────────────────────────────
-# Must match jwt.public-key in user-service.
-# Set JWT_PUBLIC_KEY in .env (base64-encoded DER, generated by ./generate-keys.sh)
-jwt:
-  public-key: ${Public_Key:"MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAz9c8IMH16jZ69ip3RTngNMeZvIcVJSWQw1Ra8Chs0RiSmzPByYW99+x3PGQJQApv1IVu4SzIN72LWChxXt+kKGhU46g4v/FgB6jtzD4MC2pnzRvda9PlyV1L3w60vdribR7vMvveFdh5Mr/q0ALhNhAy7W9yoCBgPtNGO1CTUS3lM0HaYsGq8JAa8BZPAo3Kiez0ZBNMMAk30Xt/AQvrrZOmFW1SCMlLnQTjXCwoOPsIZTiuxlO4yx92GqNxKsT/eexhIndtmnrHSjSyxzbc5OukRHrxeOGeKcf9Jveg3fQ5O9bltEQf8dZqWgNy1Kgsw99G9dneA2R8YD9w2qooqQIDAQAB"}
-
-
 eureka:
   client:
-    service-url:
-      defaultZone: ${REGISTRY_SERVICE_URL:http://localhost:8761}/eureka/
     fetch-registry: true
     register-with-eureka: true
   instance:
     prefer-ip-address: true
 
 management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,gateway,circuitbreakers,circuitbreakerevents,metrics
   health:
     circuitbreakers:
       enabled: true
-  endpoint:
-    health:
-      show-details: always
 
 # ── Resilience4j Circuit Breaker / Time-Limiter ───────────────────────────────
 resilience4j:
@@ -267,7 +303,7 @@ resilience4j:
         ignoreExceptions:
           - org.springframework.web.client.HttpClientErrorException
     instances:
-      bakongTopUpCB:
+      bakongServiceCB:
         baseConfig: default
         failureRateThreshold: 60
         slowCallDurationThreshold: 300s
@@ -290,8 +326,8 @@ resilience4j:
         timeoutDuration: 15s
         cancelRunningFuture: true
     instances:
-      bakongTopUpCB:
-        timeoutDuration: 300s
+      bakongServiceCB:
+        timeoutDuration: 300s  # 5 minutes for payment processing (Bakong API)
         cancelRunningFuture: false
       userServiceCB:
         timeoutDuration: 15s
@@ -299,19 +335,5 @@ resilience4j:
       busServiceCB:
         baseConfig: default
       bookingServiceCB:
-        timeoutDuration: 300s
+        timeoutDuration: 300s  # 5 minutes for payment processing (Bakong API)
         cancelRunningFuture: false
-
-logging:
-  level:
-    root: INFO
-    com.busapp.gatewayservice: DEBUG
-    org.springframework.cloud.gateway: DEBUG
-    org.springframework.cloud.gateway.handler: DEBUG
-    org.springframework.cloud.gateway.filter: DEBUG
-    org.springframework.web: DEBUG
-    org.springframework.security: DEBUG
-    # Suppress Micrometer observation span noise (http.status_code='UNKNOWN' is a
-    # known SCG 4.1.x bug — status tag is unset at span-creation time; not a real error)
-    org.springframework.cloud.gateway.filter.headers.observation: WARN
-    reactor.netty: DEBUG

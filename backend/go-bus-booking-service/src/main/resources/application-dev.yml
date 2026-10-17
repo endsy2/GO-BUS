@@ -1,0 +1,67 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  Booking Service — DEVELOPMENT profile (active by default)
+#
+#  Every value has a localhost default that matches docker-compose.dev.yml, so
+#  the service runs from the IDE with no setup. Override any value with an
+#  environment variable of the same name.
+# ─────────────────────────────────────────────────────────────────────────────
+spring:
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:busbooking}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+  jpa:
+    show-sql: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: ${RABBITMQ_VHOST:/}
+
+# ── Bakong KHQR (merchant details are printed on every QR, so not secret) ─────
+bakong:
+  account-id: ${BAKONG_ACCOUNT_ID:chin_kongming@aclb}
+  acquiring-bank: ${ACQUIRINGBANK:chin_kongming@aclb}
+  merchant-name: ${MERCHANTNAME:CHIN KONG MING}
+  mobile-number: ${MOBILENUMBERSTORELABEL:85581362035}
+  store-label: ${STORELABEL:BusBooking}
+  base-url: ${BAKONG_BASE_URL:http://208.122.28.97:8000}
+  email: ${EMAIL:kongming434@gmail.com}
+
+# ── Telegram admin alerts (off in dev unless you set a bot token) ─────────────
+telegram:
+  bot:
+    token: ${TELEGRAM_BOT_TOKEN:}
+    enabled: ${TELEGRAM_ENABLED:false}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+
+external:
+  bus-service:
+    url: ${BUS_SERVICE_URL:http://localhost:8082}
+  user-service:
+    url: ${USER_SERVICE_URL:http://localhost:8081}
+
+management:
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    root: INFO
+    com.busapp.bookingservice: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.data.jpa: DEBUG
+    org.springframework.amqp: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN   # was TRACE — logged every bound param value (sensitive data + overhead)

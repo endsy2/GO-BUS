@@ -1,0 +1,67 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  Booking Service — PRODUCTION profile (SPRING_PROFILES_ACTIVE=prod)
+#
+#  No secrets and no fallback values here: every ${VAR} without a default is
+#  REQUIRED. If one is missing the service refuses to start (fail fast), instead
+#  of silently running with a development value.
+#
+#  RabbitMQ as a single URL (e.g. Railway): set SPRING_RABBITMQ_ADDRESSES to the
+#  amqp:// URL — Spring then ignores host/port below.
+# ─────────────────────────────────────────────────────────────────────────────
+spring:
+  datasource:
+    # sslmode=prefer uses TLS when the server supports it (Railway, Neon, ...)
+    # and falls back to plain TCP for the self-hosted container.
+    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT:5432}/${POSTGRES_DB}?sslmode=${PGSSLMODE:prefer}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+  jpa:
+    show-sql: false
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+    virtual-host: ${RABBITMQ_VHOST:/}
+
+# ── Bakong KHQR (optional — leave empty to disable) ───────────────────────────
+bakong:
+  account-id: ${BAKONG_ACCOUNT_ID:}
+  acquiring-bank: ${ACQUIRINGBANK:}
+  merchant-name: ${MERCHANTNAME:}
+  mobile-number: ${MOBILENUMBERSTORELABEL:}
+  store-label: ${STORELABEL:}
+  base-url: ${BAKONG_BASE_URL:}
+  email: ${EMAIL:}
+
+# ── Telegram admin alerts (optional) ──────────────────────────────────────────
+telegram:
+  bot:
+    token: ${TELEGRAM_BOT_TOKEN:}
+    enabled: ${TELEGRAM_ENABLED:false}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL}
+
+external:
+  bus-service:
+    url: ${BUS_SERVICE_URL}
+  user-service:
+    url: ${USER_SERVICE_URL}
+
+management:
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  level:
+    root: INFO
+    com.busapp.bookingservice: INFO

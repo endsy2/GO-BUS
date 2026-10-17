@@ -24,7 +24,7 @@ openssl rsa -pubout -in private.pem -out public.pem 2>/dev/null
 PRIVATE_B64=$(grep -v "^-----" private.pem | tr -d '\n')
 PUBLIC_B64=$(grep -v "^-----" public.pem | tr -d '\n')
 
-echo "========== COPY THESE INTO YOUR .env FILE ================================"
+echo "========== COPY THESE INTO .env.prod (repo root) ========================="
 echo ""
 echo "JWT_PRIVATE_KEY=${PRIVATE_B64}"
 echo ""

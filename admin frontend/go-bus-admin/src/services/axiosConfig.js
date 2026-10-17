@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = process.env.REACT_APP_BASE_URL || 'https://go-bus-gateway-service-production.up.railway.app';
+const BASE_URL = process.env.REACT_APP_BASE_URL || 'http://localhost:8080';
 
 // Create axios instance with /api prefix
 const axiosInstance = axios.create({

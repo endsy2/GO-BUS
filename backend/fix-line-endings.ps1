@@ -23,4 +23,4 @@ if (Test-Path $gradlewPath) {
 }
 
 Write-Host "`nNow rebuild the Docker images:" -ForegroundColor Yellow
-Write-Host "  docker-compose -f docker-compose.dev.yml build --no-cache" -ForegroundColor White
+Write-Host "  docker compose -f ../docker-compose.dev.yml build --no-cache" -ForegroundColor White

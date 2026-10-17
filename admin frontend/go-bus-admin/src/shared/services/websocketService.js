@@ -3,7 +3,7 @@ import SockJS from 'sockjs-client';
 
 const WS_URL =
   process.env.REACT_APP_WS_URL ||
-  'https://go-bus-gateway-service-production.up.railway.app/bus-service/ws/bus';
+  'http://localhost:8080/bus-service/ws/bus';
 
 // Booking-service WebSocket endpoint (gateway route /booking-service/ws/booking/**).
 // Booking lifecycle events (/topic/admin/bookings, /topic/admin/dashboard) are
@@ -13,7 +13,7 @@ const BOOKING_WS_URL =
   process.env.REACT_APP_WS_BOOKING_URL ||
   (process.env.REACT_APP_BASE_URL
     ? `${process.env.REACT_APP_BASE_URL}/booking-service/ws/booking`
-    : 'https://go-bus-gateway-service-production.up.railway.app/booking-service/ws/booking');
+    : 'http://localhost:8080/booking-service/ws/booking');
 
 // Conservative reconnect strategy: 5 s fixed delay, give up after 8 failed attempts.
 // Do NOT set this lower than 3000 — rapid reconnects destabilise the server.

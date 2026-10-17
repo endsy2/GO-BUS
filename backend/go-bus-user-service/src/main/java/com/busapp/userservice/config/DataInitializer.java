@@ -10,6 +10,7 @@ import com.busapp.userservice.service.RolePermissionCacheService;
 import com.busapp.userservice.service.RolePermissionNameCacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -67,6 +68,10 @@ public class DataInitializer implements CommandLineRunner {
     private final RolePermissionCacheService rolePermissionCacheService;
     private final RolePermissionNameCacheService rolePermissionNameCacheService;
     private final TransactionTemplate transactionTemplate;
+
+    // Set per environment (application-dev.yml / ADMIN_DEFAULT_PASSWORD in prod)
+    @Value("${app.admin.default-password}")
+    private String defaultAdminPassword;
 
     @Override
     public void run(String... args) {
@@ -160,7 +165,7 @@ public class DataInitializer implements CommandLineRunner {
                     .userName(adminUsername)
                     .fullName("System Administrator")
                     .email(adminEmail)
-                    .passwordHash(passwordEncoder.encode("admin123"))
+                    .passwordHash(passwordEncoder.encode(defaultAdminPassword))
                     .active(true)
                     .isEmployee(true)
                     .isDeleted(false)

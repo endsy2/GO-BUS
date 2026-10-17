@@ -88,4 +88,3 @@ dump.rdb
 # ── Claude Code ───────────────────────────────────────────────────────────────
 CLAUDE.md
 *.md
-application-prod.yml

@@ -1,0 +1,11 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  Eureka Server — PRODUCTION profile (SPRING_PROFILES_ACTIVE=prod)
+# ─────────────────────────────────────────────────────────────────────────────
+management:
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  level:
+    root: INFO
