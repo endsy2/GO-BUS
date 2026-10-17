@@ -55,7 +55,7 @@ if curl -L -o "/tmp/$GRADLE_ZIP" "$GRADLE_URL"; then
             echo "✓ Gradle wrapper fixed successfully!"
             echo ""
             echo "Now rebuild the Docker images:"
-            echo "  docker-compose -f docker-compose.dev.yml build --no-cache"
+            echo "  docker compose -f ../docker-compose.dev.yml build --no-cache"
         else
             echo "✗ File seems too small, something went wrong"
             exit 1

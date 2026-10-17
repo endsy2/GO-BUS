@@ -1,0 +1,36 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  Bus Service — PRODUCTION profile (SPRING_PROFILES_ACTIVE=prod)
+#
+#  No secrets and no fallback values here: every ${VAR} without a default is
+#  REQUIRED. If one is missing the service refuses to start (fail fast), instead
+#  of silently running with a development value.
+# ─────────────────────────────────────────────────────────────────────────────
+spring:
+  datasource:
+    # sslmode=prefer uses TLS when the server supports it (Railway, Neon, ...)
+    # and falls back to plain TCP for the self-hosted container.
+    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT:5432}/${POSTGRES_DB}?sslmode=${PGSSLMODE:prefer}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+  jpa:
+    show-sql: false
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL}
+
+# Service URLs
+booking:
+  service:
+    url: ${BOOKING_SERVICE_URL}
+
+management:
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  level:
+    root: INFO
+    com.busapp.busservice: INFO

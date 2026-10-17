@@ -22,7 +22,7 @@ if curl -L -o "$WRAPPER_JAR" "$DOWNLOAD_URL"; then
     
     echo ""
     echo "Now you can rebuild the Docker images:"
-    echo "  docker-compose -f docker-compose.dev.yml build --no-cache"
+    echo "  docker compose -f ../docker-compose.dev.yml build --no-cache"
 else
     echo "✗ Failed to download gradle-wrapper.jar"
     echo ""

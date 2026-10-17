@@ -1,0 +1,78 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  User Service — DEVELOPMENT profile (active by default)
+#
+#  Every value has a localhost default that matches docker-compose.dev.yml, so
+#  the service runs from the IDE with no setup. Override any value with an
+#  environment variable of the same name.
+# ─────────────────────────────────────────────────────────────────────────────
+spring:
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:busbooking}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+  jpa:
+    show-sql: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
+# ── MinIO Configuration ────────────────────────────────────────────────────────
+minio:
+  endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+  # Public, browser-reachable endpoint used ONLY for generating presigned URLs.
+  # Presigned URLs are loaded directly by the browser (not via the gateway), and
+  # the host is part of the SigV4 signature — so it must be signed with the host
+  # the browser will actually hit.
+  public-endpoint: ${MINIO_PUBLIC_ENDPOINT:http://localhost:9000}
+  access-key: ${MINIO_ACCESS_KEY:minioadmin}
+  secret-key: ${MINIO_SECRET_KEY:minioadmin}
+  bucket-name: ${MINIO_BUCKET_NAME:busapp-profiles}
+
+# ── Bakong KHQR (merchant details are printed on every QR, so not secret) ─────
+bakong:
+  account-id: ${BAKONG_ACCOUNT_ID:chin_kongming@aclb}
+  acquiring-bank: ${ACQUIRINGBANK:chin_kongming@aclb}
+  merchant-name: ${MERCHANTNAME:CHIN KONG MING}
+  mobile-number: ${MOBILENUMBERSTORELABEL:85581362035}
+  store-label: ${STORELABEL:BusBooking}
+  base-url: ${BAKONG_BASE_URL:http://208.122.28.97:8000}
+  email: ${EMAIL:kongming434@gmail.com}
+
+# ── JWT Configuration ──────────────────────────────────────────────────────────
+# DEV-ONLY key pair. It is public (committed to git), so it must NEVER be used
+# in production. The public key matches gateway-service/application-dev.yml.
+jwt:
+  private-key: ${JWT_PRIVATE_KEY:MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDP1zwgwfXqNnr2KndFOeA0x5m8hxUlJZDDVFrwKGzRGJKbM8HJhb337Hc8ZAlACm/UhW7hLMg3vYtYKHFe36QoaFTjqDi/8WAHqO3MPgwLamfNG91r0+XJXUvfDrS92uJtHu8y+94V2Hkyv+rQAuE2EDLtb3KgIGA+00Y7UJNRLeUzQdpiwarwkBrwFk8CjcqJ7PRkE0wwCTfRe38BC+utk6YVbVIIyUudBONcLCg4+whlOK7GU7jLH3Yao3EqxP957GEid22aesdKNLLHNtzk66REevF44Z4px/0m96Dd9Dk71uW0RB/x1mpaA3LUqCzD30b12d4DZHxgP3DaqiipAgMBAAECggEABN9udPQnMFELq/bN6g0T0Rj25UEjgUXysWmqYiQIfRR+522ctv1QOV5NY1iTEPHNsmVYdqYGoavrdusn0Uob/qiHiPjaL8HYdwWCYb34qVHa0ie7lroWkpSB4V5mZWca1OUbRY47JDb5jHOMbUkL/6j8kK2CufdYWlC4vk5Cze3jNFf46pI8KnGIGnrF9Qon31mLdaGbGWX5utjkLlttUys1Kx/rwLomoc1Aj8P/N1XUf89ZMoR/jFIwElWWFkski5WoSqnLZilqsv9TACy6gSG6v5chJ/h6Glvp5Hwvnc3XXgwL+phzyEvBf4aXgWv7rhbK9wNdcFgCjkRtIpAB6wKBgQDxrspzbpR0nOfY0Kebn3PTCLdgCqdL/cgyyoplVYbRA1Qlgz0ifj7Jf6uoDJ2ViEQQNHytJOZWqBTBSyhjirFMXHy1NxV7/mg8QxMWQGr94Tca6HbYjpAxiGkqdbDB1RXjTZbQgdIMndzQGWAY8rHPZUXuWnnVVwOcXzxifq4WbwKBgQDcJzehLXdQtIJt8KKHGXCeswpKwrXFjEupViVUHAxySYYsSweiz/N/X5imhdziRpMs5l4JJoSdZdBo6jIXDxX5zdhTJRl0/aeZ3uP3FKDwSDouAKZA4rcLsHIxAxIJxbsRjgvDHeFkl/JOUEjgFjJ+rhPhbZXGPlblH2v0c/P+ZwKBgFCHakPOK78zbPlMhRyQo9pEhD2HLzld5XAvFrAvME3Cqy4Yra0pnagsVzkWgweJMQypQIW8ztc/CDNj5KBOXUdRZehH42u+WGMEAn8elcfkXCUmIjuEPT2T817Hek8LvlBP0RnGuAOmMiZQ3jlR3Ld7SjLiiMfyR2y6OveiuEUXAoGBAL8c3FHy4i0RRliiGLUnBHj/++NCfAFt9RCfU/BcGQHtiahRyeMwmrTsC9wjQMi9c2363Y8b/OuWQwGQrMMPuYgNhclH332L5T7SGxuWsM9mI/tjXO/e4AApwDeD7tjE6cwnf1Z2Tf/BV/tb/qdpHZSTEXcUZnyeCVkFmfWv4xPpAoGAY8v54Pb+AD0EKQK+uMyhM1G8CcFUlxepQbqYzLamNzKClSBZgujZ1seq1wgjv6GpKEIULLFHwwPlobU3lhMcr/A/FbEUIR9SJCedZAjKlADd3vnGvIY+//sbf74Swga/nrKZxrb0a3oydgZQpW8CbChXdkX0klgoPmlbF9AHyGA=}
+  public-key: ${JWT_PUBLIC_KEY:MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAz9c8IMH16jZ69ip3RTngNMeZvIcVJSWQw1Ra8Chs0RiSmzPByYW99+x3PGQJQApv1IVu4SzIN72LWChxXt+kKGhU46g4v/FgB6jtzD4MC2pnzRvda9PlyV1L3w60vdribR7vMvveFdh5Mr/q0ALhNhAy7W9yoCBgPtNGO1CTUS3lM0HaYsGq8JAa8BZPAo3Kiez0ZBNMMAk30Xt/AQvrrZOmFW1SCMlLnQTjXCwoOPsIZTiuxlO4yx92GqNxKsT/eexhIndtmnrHSjSyxzbc5OukRHrxeOGeKcf9Jveg3fQ5O9bltEQf8dZqWgNy1Kgsw99G9dneA2R8YD9w2qooqQIDAQAB}
+
+# ── Default admin account (created on first start if it does not exist) ───────
+app:
+  admin:
+    default-password: ${ADMIN_DEFAULT_PASSWORD:admin123}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+
+# Service URLs
+booking:
+  service:
+    url: ${BOOKING_SERVICE_URL:http://localhost:8083}
+
+management:
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    root: INFO
+    com.busapp.userservice: DEBUG
+    org.springframework.web: INFO
+    org.springframework.data.jpa: INFO
+    org.springframework.security: INFO
+    org.hibernate.SQL: DEBUG          # still shows queries
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN   # was TRACE — logged every param value, huge overhead

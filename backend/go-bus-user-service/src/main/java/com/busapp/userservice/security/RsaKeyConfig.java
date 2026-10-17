@@ -37,8 +37,6 @@ public class RsaKeyConfig {
      */
     @Bean
     public KeyPair rsaKeyPair() throws Exception {
-        log.info("private key:{}", privateKeyBase64);
-        log.info("public key:{}", publicKeyBase64);
         if (!privateKeyBase64.isBlank() && !publicKeyBase64.isBlank()) {
             KeyFactory kf = KeyFactory.getInstance("RSA");
 

@@ -91,43 +91,103 @@ downstream requests. Downstream services trust those headers and never re-verify
 
 ---
 
-## Getting Started
+## Environments
 
-### Backend (Docker — recommended)
+There are two environments. The code is the same in both — only the configuration changes.
+
+| | Development | Production |
+|---|---|---|
+| Spring profile | `dev` (the default — nothing to set) | `prod` (`SPRING_PROFILES_ACTIVE=prod`) |
+| Compose file | `docker-compose.dev.yml` | `docker-compose.prod.yml` |
+| Env file | `.env.dev` (copy of `.env.dev.example`) | `.env.prod` (copy of `.env.prod.example`) |
+| Secrets | Safe dev defaults built in | Required — the stack refuses to start without them |
+| Exposed ports | Everything on `127.0.0.1`; gateway on all interfaces | Only nginx `:80` is public |
+| Logs | Readable text, DEBUG, SQL shown | JSON, INFO, no SQL |
+| Admin dashboard | `npm start` (reads `.env.development`) | Built into an image, served behind nginx |
+
+### How the configuration is organised
+
+Each backend service has three files in `src/main/resources/`:
+
+| File | Contains |
+|---|---|
+| `application.yml` | Settings shared by every environment (pools, routes, timeouts). No secrets. |
+| `application-dev.yml` | Local defaults: `localhost`, dev passwords, a **dev-only** JWT key pair. |
+| `application-prod.yml` | Only `${VARIABLE}` references. A variable without a default is **required**. |
+
+Spring loads `application.yml` first, then the active profile's file on top of it. Any value can
+also be overridden by an environment variable of the same name.
+
+### Development
 
 ```bash
-cd backend
-cp .env.example .env
-./generate-keys.sh        # generates RS256 key pair — paste output into .env
-docker compose up --build
+cp .env.dev.example .env.dev
 ```
 
-This starts all five services plus PostgreSQL, Redis, RabbitMQ, and MinIO.
-
-**Run a single service locally** (with infra already up):
+**Option A — infrastructure in Docker, services in your IDE** (fastest edit → run loop):
 
 ```bash
-cd backend/go-bus-user-service
-./gradlew bootRun
+docker compose -f docker-compose.dev.yml --env-file .env.dev up -d postgres redis rabbitmq minio
+cd backend/go-bus-registry-service && ./gradlew bootRun   # then user, bus, booking — gateway last
 ```
 
-Start order when running without Docker: **Registry → User / Bus / Booking → Gateway**.
+No profile flag or env vars are needed: `dev` is the default and points at `localhost`.
 
-### Admin Dashboard
+**Option B — the whole backend in Docker:**
+
+```bash
+docker compose -f docker-compose.dev.yml --env-file .env.dev up -d --build
+```
+
+**Admin dashboard** (either option):
 
 ```bash
 cd "admin frontend/go-bus-admin"
 npm install
-npm start          # dev server
-npm run build      # production build
+npm start
 ```
 
-Required `.env`:
+| Dev URL | |
+|---|---|
+| Admin dashboard | http://localhost:3000 — `admin@busapp.com` / `admin123` (dev only) |
+| API gateway | http://localhost:8080 |
+| Eureka | http://localhost:8761 |
+| RabbitMQ UI | http://localhost:15672 — `guest` / `guest` |
+| MinIO console | http://localhost:9001 — `minioadmin` / `minioadmin` |
+| RedisInsight | http://localhost:5540 |
 
+### Production
+
+```bash
+cp .env.prod.example .env.prod
+./backend/generate-keys.sh           # paste JWT_PRIVATE_KEY and JWT_PUBLIC_KEY into .env.prod
+# fill in every REQUIRED value; set REACT_APP_* to your server's IP or domain
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+docker compose -f docker-compose.prod.yml ps   # wait until every service is "healthy"
 ```
-REACT_APP_BASE_URL=https://<your-gateway-host>
-REACT_APP_WS_URL=https://<your-gateway-host>/bus-service/ws/bus
-```
+
+Then open `http://<your-server-ip>/`. If a required value is missing, compose stops before
+starting anything, e.g. `required variable JWT_PRIVATE_KEY is missing a value`.
+
+**Never reuse the development JWT keys or passwords in production** — they are public in git, so
+anyone could forge an admin token.
+
+**Railway / other hosts.** Every Docker image already defaults to the `prod` profile. Set the
+variables that the service's `application-prod.yml` references. Variables renamed by the
+environment split:
+
+| Old name | New name |
+|---|---|
+| `Public_Key` (gateway) | `JWT_PUBLIC_KEY` |
+| `REGISTRY_SERVICE_URL`, `EUREKA_BASE_URL`, `EUREKA_HOST` + `EUREKA_PORT` | `EUREKA_URL` (full URL ending in `/eureka/`) |
+| `BUS-SERVICE-URL`, `BUS_SERVICE_BASE_URL` (booking) | `BUS_SERVICE_URL` |
+| `USER-SERVICE-URL`, `USER_SERVICE_BASE_URL` (booking) | `USER_SERVICE_URL` |
+| `BOOKING_SERVICE_HOST` + `BOOKING_SERVICE_PORT` | `BOOKING_SERVICE_URL` |
+| `RABBITMQ_URL` (booking) | `SPRING_RABBITMQ_ADDRESSES` |
+| `POLL-INTERVAL`, `TIME-OUT` | `BAKONG_POLLING_INTERVAL_MS`, `BAKONG_CONNECTION_TIMEOUT_MS` |
+
+New: `ADMIN_DEFAULT_PASSWORD` (user-service). `JWT_PRIVATE_KEY` / `JWT_PUBLIC_KEY` are now actually
+read by user-service (they used to be hard-coded).
 
 ### Bakong Payment Service (optional, standalone)
 
@@ -159,9 +219,10 @@ API collections for Postman are in `backend/` (`BusApp Microservices v4.postman_
 
 ## Deployment
 
-- **Railway** (primary) — each service deployed independently. See `RAILWAY_DEPLOYMENT_GUIDE.md`.
-- **Self-hosted VPS** — single-host Docker Compose via `docker-compose.vps.yml` (backend services +
-  admin frontend behind an Nginx reverse proxy). See `DEPLOY_VPS.md`.
+- **Railway** (primary) — each service deployed independently with the `prod` profile. See
+  [Environments › Production](#production) for the variables.
+- **Self-hosted VPS** — single-host Docker Compose via `docker-compose.prod.yml` (backend services +
+  admin frontend behind an Nginx reverse proxy). See [Environments › Production](#production).
 
 Deployment order: PostgreSQL / Redis / RabbitMQ / MinIO → Eureka → User / Bus / Booking → Gateway → Frontend.
 

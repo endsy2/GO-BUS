@@ -27,4 +27,4 @@ RUN ls -lh /app/ && echo "Java version:" && java -version
 EXPOSE 8761
 
 # Add verbose logging to see what's happening
-ENTRYPOINT ["sh", "-c", "echo 'Starting Eureka Server on port '${PORT:-8761} && java -Dserver.port=${PORT:-8761} -Dspring.profiles.active=${SPRING_PROFILES_ACTIVE:-production} -Xmx768m -Xms512m -jar app.jar"]
+ENTRYPOINT ["sh", "-c", "echo 'Starting Eureka Server on port '${PORT:-8761} && java -Dserver.port=${PORT:-8761} -Dspring.profiles.active=${SPRING_PROFILES_ACTIVE:-prod} -Xmx768m -Xms512m -jar app.jar"]

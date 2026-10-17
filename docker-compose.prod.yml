@@ -1,7 +1,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
-#  Go Bus Express — Self-hosted VPS deployment (plain HTTP on server IP)
+#  Go Bus Express — PRODUCTION environment (single server / VPS)
 #
-#  Brings up the FULL stack on a single VPS:
+#  Brings up the FULL stack:
 #    infra (postgres · redis · rabbitmq · minio)
 #    eureka · user · bus · booking · gateway
 #    admin frontend (React, served by `serve`)
@@ -11,13 +11,30 @@
 #  admin ports bound to 127.0.0.1 (reach them through an SSH tunnel, never
 #  exposed to the internet).
 #
-#  Usage (run from the repo root on the VPS):
-#      cp .env.vps.example .env.vps
-#      # edit .env.vps  ->  set REACT_APP_BASE_URL / REACT_APP_WS_URL to your IP
-#      docker compose -f docker-compose.vps.yml --env-file .env.vps up -d --build
+#  Usage (run from the repo root on the server):
+#      cp .env.prod.example .env.prod
+#      # fill in .env.prod  (passwords, JWT keys, public IP / domain)
+#      docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 #
-#  Then open:   http://<YOUR_VPS_IP>/
+#  Required secrets use ${VAR:?message}: if one is missing, compose refuses to
+#  start and prints the message, instead of deploying with a weak default.
+#
+#  Then open:   http://<YOUR_SERVER_IP>/
 # ─────────────────────────────────────────────────────────────────────────────
+
+# Settings shared by every Spring Boot service (merged in with "<<:")
+x-spring-env: &spring-env
+  SPRING_PROFILES_ACTIVE: prod
+  EUREKA_URL: http://eureka-server:8761/eureka/
+
+x-db-env: &db-env
+  POSTGRES_HOST: postgres
+  POSTGRES_PORT: 5432
+  POSTGRES_DB: ${POSTGRES_DB:-busbooking}
+  POSTGRES_USER: ${POSTGRES_USER:-postgres}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.prod}
+  # The bundled postgres container has no TLS. Use require for a managed DB.
+  PGSSLMODE: disable
 
 services:
 
@@ -30,13 +47,13 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-busbooking}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.prod}
     ports:
       - "127.0.0.1:5432:5432"     # localhost-only (SSH tunnel for admin access)
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-busbooking}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -73,8 +90,8 @@ services:
     ports:
       - "127.0.0.1:15672:15672"   # management UI, localhost-only
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-guest}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-busapp}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?Set RABBITMQ_PASSWORD in .env.prod}
       RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:-/}
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
@@ -94,13 +111,13 @@ services:
     ports:
       - "127.0.0.1:9001:9001"     # console, localhost-only
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-busapp}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD (8+ characters) in .env.prod}
     command: server /data --console-address ":9001"
     volumes:
       - minio-data:/data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: ["CMD", "mc", "ready", "local"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -112,11 +129,11 @@ services:
   eureka-server:
     build:
       context: ./backend/go-bus-registry-service
-      dockerfile: Dockerfile
     container_name: busapp-eureka
     restart: unless-stopped
     environment:
-      - EUREKA_INSTANCE_HOSTNAME=eureka-server
+      SPRING_PROFILES_ACTIVE: prod
+      EUREKA_INSTANCE_HOSTNAME: eureka-server
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
       interval: 30s
@@ -131,27 +148,31 @@ services:
   user-service:
     build:
       context: ./backend/go-bus-user-service
-      dockerfile: Dockerfile
     container_name: busapp-user
     restart: unless-stopped
     environment:
-      - POSTGRES_HOST=postgres
-      - POSTGRES_PORT=5432
-      - POSTGRES_DB=${POSTGRES_DB:-busbooking}
-      - POSTGRES_USER=${POSTGRES_USER:-postgres}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - PGSSLMODE=disable
-      - EUREKA_HOST=eureka-server
-      - EUREKA_PORT=8761
-      - SPRING_DATA_REDIS_HOST=redis
-      - SPRING_DATA_REDIS_PORT=6379
-      - SPRING_DATA_REDIS_PASSWORD=${REDIS_PASSWORD:-}
-      - JWT_ACCESS_EXPIRY=${JWT_ACCESS_EXPIRY:-900000}
-      - JWT_REFRESH_EXPIRY=${JWT_REFRESH_EXPIRY:-604800000}
-      - MINIO_ENDPOINT=http://minio:9000
-      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:-minioadmin}
-      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:-minioadmin}
-      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME:-busapp-profiles}
+      <<: [*spring-env, *db-env]
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      JWT_PRIVATE_KEY: ${JWT_PRIVATE_KEY:?Set JWT_PRIVATE_KEY in .env.prod (run backend/generate-keys.sh)}
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY:?Set JWT_PUBLIC_KEY in .env.prod (run backend/generate-keys.sh)}
+      JWT_ACCESS_EXPIRY: ${JWT_ACCESS_EXPIRY:-900000}
+      JWT_REFRESH_EXPIRY: ${JWT_REFRESH_EXPIRY:-604800000}
+      ADMIN_DEFAULT_PASSWORD: ${ADMIN_DEFAULT_PASSWORD:?Set ADMIN_DEFAULT_PASSWORD in .env.prod}
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_PUBLIC_ENDPOINT: ${MINIO_PUBLIC_ENDPOINT:-http://minio:9000}
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-busapp}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD in .env.prod}
+      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-busapp-profiles}
+      BOOKING_SERVICE_URL: http://booking-service:8083
+      BAKONG_ACCOUNT_ID: ${BAKONG_ACCOUNT_ID:-}
+      ACQUIRINGBANK: ${ACQUIRINGBANK:-}
+      MERCHANTNAME: ${MERCHANTNAME:-}
+      MOBILENUMBERSTORELABEL: ${MOBILENUMBERSTORELABEL:-}
+      STORELABEL: ${STORELABEL:-}
+      BAKONG_BASE_URL: ${BAKONG_BASE_URL:-}
+      EMAIL: ${EMAIL:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -160,7 +181,7 @@ services:
       eureka-server:
         condition: service_healthy
       minio:
-        condition: service_healthy
+        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
       interval: 30s
@@ -173,18 +194,11 @@ services:
   bus-service:
     build:
       context: ./backend/go-bus-bus-service
-      dockerfile: Dockerfile
     container_name: busapp-bus
     restart: unless-stopped
     environment:
-      - POSTGRES_HOST=postgres
-      - POSTGRES_PORT=5432
-      - POSTGRES_DB=${POSTGRES_DB:-busbooking}
-      - POSTGRES_USER=${POSTGRES_USER:-postgres}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - PGSSLMODE=disable
-      - EUREKA_HOST=eureka-server
-      - EUREKA_PORT=8761
+      <<: [*spring-env, *db-env]
+      BOOKING_SERVICE_URL: http://booking-service:8083
     depends_on:
       postgres:
         condition: service_healthy
@@ -202,37 +216,29 @@ services:
   booking-service:
     build:
       context: ./backend/go-bus-booking-service
-      dockerfile: Dockerfile
     container_name: busapp-booking
     restart: unless-stopped
     environment:
-      - POSTGRES_HOST=postgres
-      - POSTGRES_PORT=5432
-      - POSTGRES_DB=${POSTGRES_DB:-busbooking}
-      - POSTGRES_USER=${POSTGRES_USER:-postgres}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - PGSSLMODE=disable
-      - EUREKA_HOST=eureka-server
-      - EUREKA_PORT=8761
-      - BUS-SERVICE-URL=http://bus-service:8082
-      - USER-SERVICE-URL=http://user-service:8081
-      - SPRING_RABBITMQ_HOST=rabbitmq
-      - SPRING_RABBITMQ_PORT=5672
-      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USERNAME:-guest}
-      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
-      - SPRING_RABBITMQ_VIRTUAL_HOST=${RABBITMQ_VHOST:-/}
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
-      - BAKONG_ACCOUNT_ID=${BAKONG_ACCOUNT_ID:-}
-      - ACQUIRINGBANK=${ACQUIRINGBANK:-}
-      - MERCHANTNAME=${MERCHANTNAME:-}
-      - MOBILENUMBERSTORELABEL=${MOBILENUMBERSTORELABEL:-}
-      - STORELABEL=${STORELABEL:-}
-      - BAKONG_BASE_URL=${BAKONG_BASE_URL:-}
-      - EMAIL=${EMAIL:-}
-      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
-      - TELEGRAM_ENABLED=${TELEGRAM_ENABLED:-false}
+      <<: [*spring-env, *db-env]
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-busapp}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:?Set RABBITMQ_PASSWORD in .env.prod}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST:-/}
+      USER_SERVICE_URL: http://user-service:8081
+      BUS_SERVICE_URL: http://bus-service:8082
+      BAKONG_ACCOUNT_ID: ${BAKONG_ACCOUNT_ID:-}
+      ACQUIRINGBANK: ${ACQUIRINGBANK:-}
+      MERCHANTNAME: ${MERCHANTNAME:-}
+      MOBILENUMBERSTORELABEL: ${MOBILENUMBERSTORELABEL:-}
+      STORELABEL: ${STORELABEL:-}
+      BAKONG_BASE_URL: ${BAKONG_BASE_URL:-}
+      EMAIL: ${EMAIL:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_ENABLED: ${TELEGRAM_ENABLED:-false}
     depends_on:
       postgres:
         condition: service_healthy
@@ -256,30 +262,25 @@ services:
   gateway-service:
     build:
       context: ./backend/go-bus-gateway-service
-      dockerfile: Dockerfile
     container_name: busapp-gateway
     restart: unless-stopped
     ports:
       - "127.0.0.1:8080:8080"     # localhost-only; public access is via nginx
     environment:
-      - EUREKA_HOST=eureka-server
-      - EUREKA_PORT=8761
-      - REGISTRY_SERVICE_URL=http://eureka-server:8761
+      <<: *spring-env
       # Downstream service URLs (gateway uses direct URLs, not Eureka lookup)
-      - USER_SERVICE_URL=http://user-service:8081
-      - BUS_SERVICE_URL=http://bus-service:8082
-      - BOOKING_SERVICE_URL=http://booking-service:8083
-      - BUS_SERVICE_WS_URL=ws://bus-service:8082
-      - BOOKING_SERVICE_WS_URL=ws://booking-service:8083
+      USER_SERVICE_URL: http://user-service:8081
+      BUS_SERVICE_URL: http://bus-service:8082
+      BOOKING_SERVICE_URL: http://booking-service:8083
+      BUS_SERVICE_WS_URL: ws://bus-service:8082
+      BOOKING_SERVICE_WS_URL: ws://booking-service:8083
       # Redis (token blacklist + rate limiting)
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
-      - SPRING_DATA_REDIS_HOST=redis
-      - SPRING_DATA_REDIS_PORT=6379
-      - SPRING_DATA_REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY:?Set JWT_PUBLIC_KEY in .env.prod (run backend/generate-keys.sh)}
       # CORS — single-origin via nginx means no cross-origin calls, but keep open
-      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-*}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-*}
     depends_on:
       redis:
         condition: service_healthy
@@ -305,11 +306,10 @@ services:
   admin-frontend:
     build:
       context: "./admin frontend/go-bus-admin"
-      dockerfile: Dockerfile
       args:
-        # Baked into the React bundle at build time. MUST point at this VPS.
-        REACT_APP_BASE_URL: ${REACT_APP_BASE_URL}
-        REACT_APP_WS_URL: ${REACT_APP_WS_URL}
+        # Baked into the React bundle at build time. MUST point at this server.
+        REACT_APP_BASE_URL: ${REACT_APP_BASE_URL:?Set REACT_APP_BASE_URL in .env.prod}
+        REACT_APP_WS_URL: ${REACT_APP_WS_URL:?Set REACT_APP_WS_URL in .env.prod}
     container_name: busapp-admin
     restart: unless-stopped
     networks:

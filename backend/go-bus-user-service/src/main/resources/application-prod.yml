@@ -1,0 +1,72 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  User Service — PRODUCTION profile (SPRING_PROFILES_ACTIVE=prod)
+#
+#  No secrets and no fallback values here: every ${VAR} without a default is
+#  REQUIRED. If one is missing the service refuses to start (fail fast), instead
+#  of silently running with a development value.
+# ─────────────────────────────────────────────────────────────────────────────
+spring:
+  datasource:
+    # sslmode=prefer uses TLS when the server supports it (Railway, Neon, ...)
+    # and falls back to plain TCP for the self-hosted container.
+    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT:5432}/${POSTGRES_DB}?sslmode=${PGSSLMODE:prefer}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+  jpa:
+    show-sql: false
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
+# ── MinIO Configuration ────────────────────────────────────────────────────────
+minio:
+  endpoint: ${MINIO_ENDPOINT}
+  # Browser-reachable host used to sign presigned URLs (see application-dev.yml)
+  public-endpoint: ${MINIO_PUBLIC_ENDPOINT:${MINIO_ENDPOINT}}
+  access-key: ${MINIO_ACCESS_KEY}
+  secret-key: ${MINIO_SECRET_KEY}
+  bucket-name: ${MINIO_BUCKET_NAME:busapp-profiles}
+
+# ── Bakong KHQR (optional — leave empty to disable) ───────────────────────────
+bakong:
+  account-id: ${BAKONG_ACCOUNT_ID:}
+  acquiring-bank: ${ACQUIRINGBANK:}
+  merchant-name: ${MERCHANTNAME:}
+  mobile-number: ${MOBILENUMBERSTORELABEL:}
+  store-label: ${STORELABEL:}
+  base-url: ${BAKONG_BASE_URL:}
+  email: ${EMAIL:}
+
+# ── JWT Configuration ──────────────────────────────────────────────────────────
+# Generate a fresh pair with backend/generate-keys.sh. The gateway needs the
+# same JWT_PUBLIC_KEY.
+jwt:
+  private-key: ${JWT_PRIVATE_KEY}
+  public-key: ${JWT_PUBLIC_KEY}
+
+# ── Default admin account (created on first start if it does not exist) ───────
+app:
+  admin:
+    default-password: ${ADMIN_DEFAULT_PASSWORD}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL}
+
+# Service URLs
+booking:
+  service:
+    url: ${BOOKING_SERVICE_URL}
+
+management:
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  level:
+    root: INFO
+    com.busapp.userservice: INFO

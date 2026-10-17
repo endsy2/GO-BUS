@@ -1,0 +1,49 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  API Gateway — PRODUCTION profile (SPRING_PROFILES_ACTIVE=prod)
+#
+#  No secrets and no fallback values here: every ${VAR} without a default is
+#  REQUIRED. If one is missing the service refuses to start (fail fast), instead
+#  of silently running with a development value.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Downstream services (used by the routes in application.yml) ───────────────
+downstream:
+  user-service: ${USER_SERVICE_URL}
+  bus-service: ${BUS_SERVICE_URL}
+  booking-service: ${BOOKING_SERVICE_URL}
+  bus-service-ws: ${BUS_SERVICE_WS_URL}
+  booking-service-ws: ${BOOKING_SERVICE_WS_URL}
+
+spring:
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
+# ── JWT Configuration ──────────────────────────────────────────────────────────
+# Must match JWT_PUBLIC_KEY of user-service (generate with backend/generate-keys.sh)
+jwt:
+  public-key: ${JWT_PUBLIC_KEY}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL}
+
+# Only health/info are public in production. Metrics and circuit-breaker state
+# reveal internals, and the gateway endpoint can change routes at runtime.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  level:
+    root: INFO
+    com.busapp.gatewayservice: INFO
+    org.springframework.cloud.gateway.filter.headers.observation: WARN

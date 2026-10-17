@@ -3,4 +3,3 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 .gradle/
 logs
-application-dev.yml

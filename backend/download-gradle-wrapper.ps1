@@ -24,7 +24,7 @@ try {
     Write-Host "✓ File size: $($fileInfo.Length) bytes" -ForegroundColor Green
     
     Write-Host "`nNow you can rebuild the Docker images:" -ForegroundColor Yellow
-    Write-Host "  docker-compose -f docker-compose.dev.yml build --no-cache" -ForegroundColor White
+    Write-Host "  docker compose -f ../docker-compose.dev.yml build --no-cache" -ForegroundColor White
 } catch {
     Write-Host "✗ Failed to download gradle-wrapper.jar" -ForegroundColor Red
     Write-Host "Error: $_" -ForegroundColor Red

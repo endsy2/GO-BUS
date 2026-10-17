@@ -1,52 +1,32 @@
-server:
-  port: 8082
-
+# ─────────────────────────────────────────────────────────────────────────────
+#  Bus Service — DEVELOPMENT profile (active by default)
+#
+#  Every value has a localhost default that matches docker-compose.dev.yml, so
+#  the service runs from the IDE with no setup. Override any value with an
+#  environment variable of the same name.
+# ─────────────────────────────────────────────────────────────────────────────
 spring:
-  application:
-    name: bus-service
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:postgres}
-    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:busbooking}
     username: ${POSTGRES_USER:postgres}
     password: ${POSTGRES_PASSWORD:postgres}
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
-    hibernate:
-      ddl-auto: update
     show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-        jdbc:
-          lob:
-            non_contextual_creation: true
-        hbm2ddl:
-          create_namespaces: true
-        default_schema: bus_service
 
 eureka:
   client:
     service-url:
-      defaultZone: http://${EUREKA_HOST:localhost}:${EUREKA_PORT:8761}/eureka/
-    fetch-registry: true
-    register-with-eureka: true
-  instance:
-    prefer-ip-address: true
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
 
-# Feign client configuration
-feign:
-  client:
-    config:
-      default:
-        connectTimeout: 5000
-        readTimeout: 5000
-        loggerLevel: BASIC
+# Service URLs
+booking:
+  service:
+    url: ${BOOKING_SERVICE_URL:http://localhost:8083}
 
 management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info
+  endpoint:
+    health:
+      show-details: always
 
 logging:
   level:
@@ -56,9 +36,3 @@ logging:
     org.springframework.data.jpa: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: WARN   # was TRACE — logged every bound param value (sensitive data + overhead)
-
-
-# ── Seat Selection Configuration ──────────────────────────────────────────────
-seat:
-  selection:
-    timeout-minutes: 5  # Auto-release pending seats after 5 minutes

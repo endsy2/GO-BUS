@@ -8,6 +8,8 @@
 .env.*
 !.env.example
 !.env.*.example
+# Public React dev settings (localhost URLs only, loaded by `npm start`)
+!/admin frontend/go-bus-admin/.env.development
 production env.txt
 production env.md
 *.pem
@@ -73,7 +75,7 @@ test-results/
 # =============================================================================
 #  Kept intentionally:
 #    README.md  project overview   *.jmx  JMeter load-test plans
-#    users.csv  JMeter dataset      .env.vps.example  deploy template
+#    users.csv  JMeter dataset      .env.dev.example / .env.prod.example  env templates
 # =============================================================================
 
 *.jmx

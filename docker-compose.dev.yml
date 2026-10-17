@@ -1,0 +1,312 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  Go Bus Express — DEVELOPMENT environment
+#
+#  First time:   cp .env.dev.example .env.dev
+#
+#  Option A — infrastructure only, run the Java services from your IDE:
+#      docker compose -f docker-compose.dev.yml --env-file .env.dev up -d postgres redis rabbitmq minio
+#      then start each service with  ./gradlew bootRun  (no profile flag needed:
+#      "dev" is the default and points at localhost)
+#
+#  Option B — the whole backend in Docker:
+#      docker compose -f docker-compose.dev.yml --env-file .env.dev up -d --build
+#
+#  Admin dashboard (both options):  cd "admin frontend/go-bus-admin" && npm start
+#
+#  Ports are bound to 127.0.0.1 (this machine only), except the gateway, which
+#  listens on every interface so a phone on the same Wi-Fi can reach it.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Own project name => own containers, network and volumes. Dev data can never
+# mix with a production stack running on the same machine.
+name: gobus-dev
+
+# Settings shared by every Spring Boot service (merged in with "<<:")
+x-spring-env: &spring-env
+  SPRING_PROFILES_ACTIVE: dev
+  EUREKA_URL: http://eureka-server:8761/eureka/
+
+x-db-env: &db-env
+  POSTGRES_HOST: postgres
+  POSTGRES_PORT: 5432
+  POSTGRES_DB: ${POSTGRES_DB:-busbooking}
+  POSTGRES_USER: ${POSTGRES_USER:-postgres}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+
+# Any extra variable you put in .env.dev (Bakong, Telegram, ...) is passed to the
+# services too. Values under "environment:" win, so container hostnames stay right.
+x-dev-env-file: &dev-env-file
+  - path: .env.dev
+    required: false
+
+services:
+
+  # ── Infrastructure ──────────────────────────────────────────────────────────
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: busapp-postgres-dev
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-busbooking}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres-data-dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - busapp-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: busapp-redis-dev
+    command: >
+      sh -c '
+        if [ -n "$$REDIS_PASSWORD" ]; then
+          redis-server --requirepass "$$REDIS_PASSWORD"
+        else
+          redis-server
+        fi
+      '
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    ports:
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - busapp-net
+
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: busapp-redisinsight-dev
+    ports:
+      - "127.0.0.1:5540:5540"
+    volumes:
+      - redisinsight-data-dev:/data
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - busapp-net
+
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: busapp-rabbitmq-dev
+    hostname: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:-/}
+    ports:
+      - "127.0.0.1:5672:5672"     # AMQP
+      - "127.0.0.1:15672:15672"   # Management UI
+    volumes:
+      - rabbitmq-data-dev:/var/lib/rabbitmq
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    networks:
+      - busapp-net
+
+  minio:
+    image: minio/minio:latest
+    container_name: busapp-minio-dev
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    command: server /data --console-address ":9001"
+    ports:
+      - "127.0.0.1:9000:9000"     # S3 API
+      - "127.0.0.1:9001:9001"     # Console
+    volumes:
+      - minio-data-dev:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - busapp-net
+
+  # ── Service Discovery ───────────────────────────────────────────────────────
+
+  eureka-server:
+    build:
+      context: ./backend/go-bus-registry-service
+    container_name: busapp-eureka-dev
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      EUREKA_INSTANCE_HOSTNAME: eureka-server
+    ports:
+      - "127.0.0.1:8761:8761"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - busapp-net
+
+  # ── Microservices ───────────────────────────────────────────────────────────
+
+  user-service:
+    build:
+      context: ./backend/go-bus-user-service
+    container_name: busapp-user-dev
+    env_file: *dev-env-file
+    environment:
+      <<: [*spring-env, *db-env]
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      MINIO_ENDPOINT: http://minio:9000
+      # The browser runs on this machine, so presigned image URLs use localhost
+      MINIO_PUBLIC_ENDPOINT: http://localhost:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-busapp-profiles}
+      BOOKING_SERVICE_URL: http://booking-service:8083
+    ports:
+      - "127.0.0.1:8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    networks:
+      - busapp-net
+
+  bus-service:
+    build:
+      context: ./backend/go-bus-bus-service
+    container_name: busapp-bus-dev
+    env_file: *dev-env-file
+    environment:
+      <<: [*spring-env, *db-env]
+      BOOKING_SERVICE_URL: http://booking-service:8083
+    ports:
+      - "127.0.0.1:8082:8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    networks:
+      - busapp-net
+
+  booking-service:
+    build:
+      context: ./backend/go-bus-booking-service
+    container_name: busapp-booking-dev
+    env_file: *dev-env-file
+    environment:
+      <<: [*spring-env, *db-env]
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST:-/}
+      USER_SERVICE_URL: http://user-service:8081
+      BUS_SERVICE_URL: http://bus-service:8082
+    ports:
+      - "127.0.0.1:8083:8083"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    networks:
+      - busapp-net
+
+  # ── API Gateway ─────────────────────────────────────────────────────────────
+
+  gateway-service:
+    build:
+      context: ./backend/go-bus-gateway-service
+    container_name: busapp-gateway-dev
+    env_file: *dev-env-file
+    environment:
+      <<: *spring-env
+      USER_SERVICE_URL: http://user-service:8081
+      BUS_SERVICE_URL: http://bus-service:8082
+      BOOKING_SERVICE_URL: http://booking-service:8083
+      BUS_SERVICE_WS_URL: ws://bus-service:8082
+      BOOKING_SERVICE_WS_URL: ws://booking-service:8083
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    ports:
+      - "8080:8080"               # all interfaces: reachable from a phone on your Wi-Fi
+    depends_on:
+      redis:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+      bus-service:
+        condition: service_healthy
+      booking-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    networks:
+      - busapp-net
+
+# ── Volumes & Networks ────────────────────────────────────────────────────────
+
+volumes:
+  postgres-data-dev:
+  redisinsight-data-dev:
+  rabbitmq-data-dev:
+  minio-data-dev:
+
+networks:
+  busapp-net:
+    driver: bridge
