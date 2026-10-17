@@ -5,21 +5,30 @@
 #    infra (postgres · redis · rabbitmq · minio)
 #    eureka · user · bus · booking · gateway
 #    admin frontend (React, served by `serve`)
-#    nginx reverse proxy  ->  the ONLY publicly exposed port (80)
+#    nginx reverse proxy  ->  the single entry point (container port 80)
 #
 #  Everything else is reachable only inside the docker network, except a few
 #  admin ports bound to 127.0.0.1 (reach them through an SSH tunnel, never
 #  exposed to the internet).
 #
-#  Usage (run from the repo root on the server):
+#  nginx publishes no host port, because on Dokploy the host's ports 80/443
+#  belong to Dokploy's Traefik proxy (binding 80 fails: "port is already
+#  allocated").
+#
+#  Deploy with Dokploy:
+#      Domains tab -> Add Domain -> service: nginx, container port: 80
+#      (Traefik routes the domain to nginx and can issue the HTTPS certificate)
+#
+#  Deploy on a plain server without Dokploy (run from the repo root):
 #      cp .env.prod.example .env.prod
 #      # fill in .env.prod  (passwords, JWT keys, public IP / domain)
+#      # and add  ports: ["80:80"]  to the nginx service below
 #      docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 #
 #  Required secrets use ${VAR:?message}: if one is missing, compose refuses to
 #  start and prints the message, instead of deploying with a weak default.
 #
-#  Then open:   http://<YOUR_SERVER_IP>/
+#  Then open your domain (Dokploy) or http://<YOUR_SERVER_IP>/ (plain server).
 # ─────────────────────────────────────────────────────────────────────────────
 
 # Settings shared by every Spring Boot service (merged in with "<<:")
@@ -317,14 +326,14 @@ services:
     networks:
       - busapp-net
 
-  # ── Reverse Proxy (the only publicly exposed service) ───────────────────────
+  # ── Reverse Proxy (the single entry point; see the header for exposure) ─────
 
   nginx:
     image: nginx:1.27-alpine
     container_name: busapp-nginx
     restart: unless-stopped
-    ports:
-      - "80:80"
+    expose:
+      - "80"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
