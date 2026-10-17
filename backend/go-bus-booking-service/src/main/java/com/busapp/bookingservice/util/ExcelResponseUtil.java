@@ -73,24 +73,6 @@ public class ExcelResponseUtil {
                 LocalDate.now().format(DATE_FORMATTER));
     }
 
-    /**
-     * Generic method to generate filename with date range
-     */
-    public static String generateFilename(String reportType, LocalDate startDate, LocalDate endDate) {
-        return String.format("%s_%s.xlsx",
-                UUID.randomUUID(),
-                LocalDate.now().format(DATE_FORMATTER));
-    }
-
-    /**
-     * Generic method to generate filename without date range
-     */
-    public static String generateFilename(String reportType) {
-        return String.format("%s_%s.xlsx",
-                UUID.randomUUID(),
-                LocalDate.now().format(DATE_FORMATTER));
-    }
-
 
     /**
      * Generates filename for revenue report

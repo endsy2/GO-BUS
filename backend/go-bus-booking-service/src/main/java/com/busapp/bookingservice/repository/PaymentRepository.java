@@ -17,7 +17,6 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     @Query("SELECT p FROM Payment p WHERE p.booking.id IN :bookingIds")
     List<Payment> findByBookingIdIn(@Param("bookingIds") List<Long> bookingIds);
-    Optional<Payment> findByTransactionId(String transactionId);
     List<Payment> findByStatus(PaymentStatus status);
     
     /**

@@ -1,7 +1,6 @@
 package com.busapp.bookingservice.service.impl;
 
 import com.busapp.bookingservice.client.BusClient;
-import com.busapp.bookingservice.dto.event.DashboardUpdateEvent;
 import com.busapp.bookingservice.dto.response.BookingVelocityResponse;
 import com.busapp.bookingservice.dto.response.DashboardStatsResponse;
 import com.busapp.bookingservice.dto.response.RevenueStreamResponse;
@@ -13,7 +12,6 @@ import com.busapp.bookingservice.repository.BookingRepository;
 import com.busapp.bookingservice.repository.PaymentRepository;
 import com.busapp.bookingservice.repository.RefundRepository;
 import com.busapp.bookingservice.service.DashboardService;
-import com.busapp.bookingservice.service.WebSocketService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,7 +33,6 @@ public class DashboardServiceImpl implements DashboardService {
     private final RefundRepository refundRepository;
     private final PaymentRepository paymentRepository;
     private final BusClient busClient;
-    private final WebSocketService webSocketService;
 
     @Override
     public DashboardStatsResponse getDashboardStats(LocalDateTime fromDate, LocalDateTime toDate) {
@@ -130,28 +127,6 @@ public class DashboardServiceImpl implements DashboardService {
                 .pendingPayments(pendingPayments)
                 .confirmedBookings(confirmedBookings)
                 .build();
-    }
-    
-    /**
-     * Broadcast dashboard stats update via WebSocket
-     */
-    public void broadcastDashboardStats() {
-        try {
-            DashboardStatsResponse stats = getDashboardStats(null, null);
-            
-            DashboardUpdateEvent event = DashboardUpdateEvent.builder()
-                    .type("DASHBOARD_UPDATE")
-                    .activeBookings(stats.getActiveBookings())
-                    .todayRevenue(stats.getTodayRevenue())
-                    .pendingRefunds(stats.getPendingRefunds())
-                    .todayBookings(stats.getTodayBookings())
-                    .timestamp(LocalDateTime.now())
-                    .build();
-            
-            webSocketService.broadcastDashboardUpdate(event);
-        } catch (Exception e) {
-            log.error("Failed to broadcast dashboard stats", e);
-        }
     }
     
     @Override

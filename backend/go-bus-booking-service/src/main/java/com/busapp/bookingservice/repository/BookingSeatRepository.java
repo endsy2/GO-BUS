@@ -15,8 +15,6 @@ public interface BookingSeatRepository extends JpaRepository<BookingSeat, Long> 
 
     @Query("SELECT bs FROM BookingSeat bs WHERE bs.booking.id IN :bookingIds")
     List<BookingSeat> findByBookingIdIn(@Param("bookingIds") List<Long> bookingIds);
-    List<BookingSeat> findBySeatId(Long seatId);
-    boolean existsByBookingIdAndSeatId(Long bookingId, Long seatId);
 
     @Query("SELECT COUNT(DISTINCT bs.seatId) FROM BookingSeat bs " +
            "JOIN bs.booking b WHERE b.scheduleId = :scheduleId " +

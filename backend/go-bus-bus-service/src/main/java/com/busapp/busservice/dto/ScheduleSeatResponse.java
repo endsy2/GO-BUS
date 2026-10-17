@@ -1,6 +1,5 @@
 package com.busapp.busservice.dto;
 
-import ch.qos.logback.core.Layout;
 import com.busapp.busservice.model.enums.SeatStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

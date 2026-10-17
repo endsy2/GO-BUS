@@ -1,7 +1,5 @@
 package com.busapp.bookingservice.dto.response;
 
-import com.busapp.bookingservice.client.BusClient;
-import com.busapp.bookingservice.client.UserClient;
 import com.busapp.bookingservice.model.enums.BookingStatus;
 import com.busapp.bookingservice.model.enums.PaymentMethodType;
 import com.busapp.bookingservice.model.enums.PaymentStatus;

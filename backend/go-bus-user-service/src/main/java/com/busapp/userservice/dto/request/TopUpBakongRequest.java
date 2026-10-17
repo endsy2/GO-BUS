@@ -1,6 +1,5 @@
 package com.busapp.userservice.dto.request;
 
-import com.busapp.userservice.model.enums.Currency;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;

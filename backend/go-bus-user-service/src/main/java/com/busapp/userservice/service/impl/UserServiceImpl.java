@@ -182,28 +182,6 @@ public class UserServiceImpl implements UserService {
         return userMapper.toResponse(userRepository.save(user));
     }
 
-//    @Override
-//    public UserResponseDetail updateEmployee(Long id, UpdateEmployeeRequest request) {
-//        User user = userRepository.findById(id)
-//                .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + id));
-//
-//        // Verify user is an employee
-//        if (user.getIsEmployee() == null || !user.getIsEmployee()) {
-//            throw new ResourceNotFoundException("User with id " + id + " is not an employee");
-//        }
-//
-//        // Update employee fields
-//        if (request.getUserName() != null) user.setUserName(request.getUserName());
-//        if (request.getFullName() != null) user.setFullName(request.getFullName());
-//        if (request.getEmail() != null) user.setEmail(request.getEmail());
-//        if (request.getPhone() != null) user.setPhone(request.getPhone());
-//        if (request.getPassword() != null) user.setPasswordHash(request.getPassword());
-//        if (request.getImage() != null) user.setImage(request.getImage());
-//        if (request.getGender() != null) user.setGender(request.getGender());
-//
-//        return userMapper.toResponse(userRepository.save(user));
-//    }
-
     @Override
     public void deleteUser(Long id) {
         log.debug("USER_SOFT_DELETE", kv("userId", id));

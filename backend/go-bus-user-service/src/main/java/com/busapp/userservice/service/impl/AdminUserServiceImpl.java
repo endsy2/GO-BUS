@@ -1,6 +1,5 @@
 package com.busapp.userservice.service.impl;
 
-import com.busapp.userservice.client.BookingClient;
 import com.busapp.userservice.dto.admin.*;
 import com.busapp.userservice.exception.BadRequestException;
 import com.busapp.userservice.exception.ResourceNotFoundException;
@@ -8,7 +7,6 @@ import com.busapp.userservice.model.Role;
 import com.busapp.userservice.model.User;
 import com.busapp.userservice.model.UserWallet;
 import com.busapp.userservice.model.WalletTransaction;
-import com.busapp.userservice.model.enums.Gender;
 import com.busapp.userservice.model.enums.TransactionStatus;
 import com.busapp.userservice.model.enums.TransactionType;
 import com.busapp.userservice.model.enums.WalletStatus;
@@ -17,7 +15,6 @@ import com.busapp.userservice.repository.UserRepository;
 import com.busapp.userservice.repository.UserWalletRepository;
 import com.busapp.userservice.repository.WalletTransactionRepository;
 import com.busapp.userservice.service.AdminUserService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
@@ -29,19 +26,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.context.request.RequestAttributes;
-import org.springframework.web.context.request.RequestContextHolder;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -54,13 +45,8 @@ public class AdminUserServiceImpl implements AdminUserService {
     private final UserWalletRepository         userWalletRepository;
     private final WalletTransactionRepository  walletTransactionRepository;
     private final PasswordEncoder              passwordEncoder;
-    private final BookingClient                bookingClient;
-    private final StringRedisTemplate          stringRedisTemplate;
-    private final ObjectMapper                 objectMapper;
 
     // ── Redis key / TTL constants ─────────────────────────────────────────────
-    private static final String BOOKING_STATS_KEY_PREFIX  = "admin:booking-stats:";
-    private static final long   BOOKING_STATS_TTL_SECONDS = 300L; // 5 minutes
 
     // ── List / Filter ─────────────────────────────────────────────────────────
 
@@ -302,91 +288,11 @@ public class AdminUserServiceImpl implements AdminUserService {
 
     // ── Redis-cached booking stats ────────────────────────────────────────────
 
-    /**
-     * Returns booking stats for the given user.
-     * Checks Redis first (TTL = 5 min); on cache miss calls booking-service via Feign
-     * and writes the result back to Redis.  Any Redis error is silently swallowed so
-     * a Redis outage never breaks the user-detail endpoint.
-     */
-    private UserBookingStatsResponse getBookingStatsCached(Long userId) {
-        String key = BOOKING_STATS_KEY_PREFIX + userId;
-
-        // 1. Try Redis cache
-        try {
-            String cached = stringRedisTemplate.opsForValue().get(key);
-            if (cached != null) {
-                log.debug("[ADMIN] Booking stats cache hit for userId={}", userId);
-                return objectMapper.readValue(cached, UserBookingStatsResponse.class);
-            }
-        } catch (Exception e) {
-            log.debug("[ADMIN] Redis read failed for booking stats userId={}: {}", userId, e.getMessage());
-        }
-
-        // 2. Cache miss — call booking-service
-        UserBookingStatsResponse stats = fetchBookingStats(userId);
-
-        // 3. Write back to Redis
-        try {
-            stringRedisTemplate.opsForValue().set(
-                    key,
-                    objectMapper.writeValueAsString(stats),
-                    BOOKING_STATS_TTL_SECONDS,
-                    TimeUnit.SECONDS);
-        } catch (Exception e) {
-            log.debug("[ADMIN] Redis write failed for booking stats userId={}: {}", userId, e.getMessage());
-        }
-
-        return stats;
-    }
-
     // ── ORM helpers ───────────────────────────────────────────────────────────
 
     private User findUser(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
-    }
-
-    /**
-     * Fetches lifetime booking + ticket stats from booking-service.
-     * Returns a zero-filled object on any failure so the detail view stays usable
-     * if booking-service is briefly unreachable.
-     */
-    private UserBookingStatsResponse fetchBookingStats(Long userId) {
-        try {
-            Map<String, Object> raw = bookingClient.getUserDetailStats(userId);
-            if (raw == null) {
-                return emptyBookingStats();
-            }
-            return UserBookingStatsResponse.builder()
-                    .totalBookings(asLong(raw.get("totalBookings")))
-                    .totalSpent(asBigDecimal(raw.get("totalSpent")))
-                    .activeTickets(asLong(raw.get("activeTickets")))
-                    .build();
-        } catch (Exception e) {
-            log.warn("[ADMIN] Failed to fetch booking stats for userId={}: {}", userId, e.getMessage());
-            return emptyBookingStats();
-        }
-    }
-
-    private UserBookingStatsResponse emptyBookingStats() {
-        return UserBookingStatsResponse.builder()
-                .totalBookings(0L)
-                .totalSpent(BigDecimal.ZERO)
-                .activeTickets(0L)
-                .build();
-    }
-
-    private Long asLong(Object v) {
-        if (v == null) return 0L;
-        if (v instanceof Number n) return n.longValue();
-        return Long.parseLong(v.toString());
-    }
-
-    private BigDecimal asBigDecimal(Object v) {
-        if (v == null) return BigDecimal.ZERO;
-        if (v instanceof BigDecimal bd) return bd;
-        if (v instanceof Number n) return BigDecimal.valueOf(n.doubleValue());
-        return new BigDecimal(v.toString());
     }
 
     // ── ORM mappers ───────────────────────────────────────────────────────────

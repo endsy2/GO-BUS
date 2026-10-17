@@ -5,7 +5,6 @@ import com.busapp.bookingservice.dto.event.PaymentStatusEvent;
 import com.busapp.bookingservice.dto.response.BookingResponse;
 
 public interface WebSocketService {
-    void broadcastPaymentStatus(PaymentStatusEvent event);
     void broadcastPaymentStatusToUser(Long userId, PaymentStatusEvent event);
     void broadcastDashboardUpdate(DashboardUpdateEvent event);
 

@@ -26,11 +26,6 @@ public interface RefundService {
     Page<RefundDetailResponse> getMyRefunds(Long userId, RefundStatus status, Pageable pageable);
     
     /**
-     * Get a specific refund by ID (user must own the booking)
-     */
-    RefundResponse getRefundById(Long refundId, Long userId);
-    
-    /**
      * Get detailed refund information with booking, schedule, route, and wallet data
      */
     RefundDetailResponse getRefundDetailById(Long refundId, Long userId);

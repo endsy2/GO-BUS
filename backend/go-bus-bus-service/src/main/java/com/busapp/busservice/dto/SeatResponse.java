@@ -1,7 +1,6 @@
 package com.busapp.busservice.dto;
 
 import com.busapp.busservice.model.enums.SeatType;
-import com.busapp.busservice.model.repository.ScheduleSeatRepository;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

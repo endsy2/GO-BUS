@@ -1,7 +1,6 @@
 package com.busapp.bookingservice.service.impl;
 
 import com.busapp.bookingservice.dto.mapper.PaymentMapper;
-import com.busapp.bookingservice.dto.request.PaymentRequest;
 import com.busapp.bookingservice.dto.response.PaymentResponse;
 import com.busapp.bookingservice.exception.ResourceNotFoundException;
 import com.busapp.bookingservice.model.Payment;
@@ -57,10 +56,4 @@ public class PaymentServiceImpl implements PaymentService {
         return paymentMapper.toResponse(payment);
     }
 
-    @Override
-    public void createPayment(Long id, PaymentRequest paymentRequest) {
-        log.debug("PAYMENT_CREATE", kv("bookingId", id));
-        Payment saved = paymentRepository.save(paymentMapper.toEntity(paymentRequest));
-        log.debug("PAYMENT_CREATED", kv("bookingId", id), kv("paymentId", saved.getId()));
-    }
 }

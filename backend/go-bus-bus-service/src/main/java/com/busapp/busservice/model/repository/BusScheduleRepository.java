@@ -16,10 +16,7 @@ public interface BusScheduleRepository extends JpaRepository<BusSchedule, Long>,
     List<BusSchedule> findByBusId(Long busId);
     List<BusSchedule> findByDepartureDateTimeBetween(LocalDateTime from, LocalDateTime to);
     List<BusSchedule> findByBusIdAndDepartureDateTimeBetween(Long busId, LocalDateTime from, LocalDateTime to);
-    List<BusSchedule> findByPriceLessThanEqual(Double maxPrice);
     @Modifying
     @Query("DELETE FROM BusSchedule bs WHERE bs.bus.id= :busId" )
     void deleteByBusId(@Param("busId")Long busId);
-
-//    Page<BusSchedule> findAll(Specification<BusSchedule> filter, PageRequest pageRequest);
 }

@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ScheduleSeatMapper {
 
-    private final SeatMapper seatMapper;
     private final BusLayoutMapper busLayoutMapper;
     private final RouteMapper routeMapper;
 

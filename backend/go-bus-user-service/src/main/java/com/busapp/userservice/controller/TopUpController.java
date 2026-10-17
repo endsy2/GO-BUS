@@ -9,8 +9,6 @@ import com.busapp.userservice.service.BakongTopUpService;
 import com.busapp.userservice.service.TopUpService;
 import com.busapp.userservice.util.UserUtil;
 import jakarta.validation.Valid;
-import kh.gov.nbc.bakong_khqr.model.KHQRData;
-import kh.gov.nbc.bakong_khqr.model.KHQRResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

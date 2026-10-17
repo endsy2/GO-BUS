@@ -1,9 +1,7 @@
 package com.busapp.busservice.mapper;
 
 import com.busapp.busservice.dto.SeatResponse;
-import com.busapp.busservice.model.Bus;
 import com.busapp.busservice.model.Seat;
-import com.busapp.busservice.model.enums.SeatStatus;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

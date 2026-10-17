@@ -15,8 +15,6 @@ public interface BusService {
 
     BusDetailResponse getBusById(Long id);
     
-    BusDetailResponse getBusByScheduleId(Long scheduleId);
-
     List<BusResponse> getBusesByRoute(Long routeId);
 
     BusResponse createBus(BusRequest request);

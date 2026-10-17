@@ -10,8 +10,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class    RefundRequest {
-//    private Double amount;
+public class RefundRequest {
     private String reason;
     private RefundMethod method;
 }

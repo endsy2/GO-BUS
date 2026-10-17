@@ -35,10 +35,6 @@ public class RedisTokenService {
                 TimeUnit.MILLISECONDS);
     }
 
-    public boolean isBlacklisted(String token) {
-        return Boolean.TRUE.equals(redis.hasKey(BLACKLIST_PREFIX + token));
-    }
-
     // ── Refresh token storage ─────────────────────────────────────────────────
 
     /**

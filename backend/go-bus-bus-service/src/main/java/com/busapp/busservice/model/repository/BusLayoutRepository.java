@@ -1,7 +1,6 @@
 package com.busapp.busservice.model.repository;
 
 import com.busapp.busservice.model.BusLayout;
-import com.busapp.busservice.model.BusRoute;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

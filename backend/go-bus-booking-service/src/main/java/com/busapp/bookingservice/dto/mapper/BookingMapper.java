@@ -9,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -86,66 +85,4 @@ public class BookingMapper {
         return response;
     }
 
-    /**
-     * Convert list of bookings to responses using batch API calls (optimized for multiple bookings)
-     */
-    public List<BookingResponse> toListResponse(List<Booking> bookings) {
-        if (bookings == null || bookings.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        // Collect unique user IDs and schedule IDs
-        Set<Long> userIds = bookings.stream()
-                .map(Booking::getUserId)
-                .collect(Collectors.toSet());
-        
-        Set<Long> scheduleIds = bookings.stream()
-                .map(Booking::getScheduleId)
-                .collect(Collectors.toSet());
-
-        // Batch fetch users and routes
-        var usersMap = fetchUsersMap(userIds);
-        var routesMap = fetchRoutesMap(scheduleIds);
-
-        // Map bookings to responses
-        return bookings.stream()
-                .map(booking -> {
-                    String fullName = usersMap.getOrDefault(booking.getUserId(), "Unknown User");
-                    String destination = routesMap.getOrDefault(booking.getScheduleId(), "Unknown Destination");
-                    return toResponse(booking, fullName, destination);
-                })
-                .collect(Collectors.toList());
-    }
-
-    private Map<Long, String> fetchUsersMap(Set<Long> userIds) {
-        try {
-            var response = userClient.getUsersByIds(userIds).getBody();
-            if (response != null && response.data() != null) {
-                return response.data().stream()
-                        .collect(Collectors.toMap(
-                                UserClient.UserBasicInfo::id,
-                                UserClient.UserBasicInfo::fullName
-                        ));
-            }
-        } catch (Exception e) {
-            log.error("Failed to fetch users from userClient. userIds={}", userIds, e);
-        }
-        return new java.util.HashMap<>();
-    }
-
-    private Map<Long, String> fetchRoutesMap(Set<Long> scheduleIds) {
-        try {
-            var response = busClient.getRoutesWithScheduleMapping(scheduleIds).getBody();
-            if (response != null && response.data() != null) {
-                return response.data().stream()
-                        .collect(Collectors.toMap(
-                                BusClient.ScheduleRouteInfo::scheduleId,
-                                info -> info.route().destination()
-                        ));
-            }
-        } catch (Exception e) {
-            log.error("Failed to fetch routes from scheduleIds. routes={}", scheduleIds, e);
-        }
-        return new java.util.HashMap<>();
-    }
 }

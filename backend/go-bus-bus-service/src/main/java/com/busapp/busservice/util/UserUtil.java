@@ -20,28 +20,6 @@ public class UserUtil {
         return userId != null ? Long.parseLong(userId) : null;
     }
 
-    /**
-     * Get current user email from X-User-Email header
-     */
-    public String getCurrentUserEmail() {
-        HttpServletRequest request = getCurrentRequest();
-        if (request == null) {
-            return null;
-        }
-        return request.getHeader("X-User-Email");
-    }
-
-    /**
-     * Get current username from X-User-Name header
-     */
-    public String getCurrentUserName() {
-        HttpServletRequest request = getCurrentRequest();
-        if (request == null) {
-            return null;
-        }
-        return request.getHeader("X-User-Name");
-    }
-
     private HttpServletRequest getCurrentRequest() {
         ServletRequestAttributes attributes = 
             (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();

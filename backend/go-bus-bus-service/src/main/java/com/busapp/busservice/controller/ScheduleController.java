@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 
 @Slf4j
@@ -102,42 +101,6 @@ public class ScheduleController {
         
         return ResponseEntity.ok(ApiResponse.of(HttpStatus.OK.value(), "Schedules retrieved successfully", responsePage));
     }
-
-    /**
-     * Filter all schedules whose departure falls within [from, to].
-     * Example: GET /api/schedules/date-range?from=2026-03-01T00:00:00&to=2026-03-31T23:59:59
-     */
-//    @GetMapping("/date-range")
-//    public ResponseEntity<ApiResponse<List<ScheduleResponse>>> getSchedulesByDateRange(
-//            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
-//            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
-//        return ResponseEntity.ok(ApiResponse.of(HttpStatus.OK.value(), "Schedules retrieved successfully",
-//                scheduleService.getSchedulesByDateRange(from, to)));
-//    }
-//
-//    /**
-//     * Filter schedules for a specific bus within a date range.
-//     * Example: GET /api/schedules/bus/1/date-range?from=...&to=...
-//     */
-//    @GetMapping("/bus/{busId}/date-range")
-//    public ResponseEntity<ApiResponse<List<ScheduleResponse>>> getSchedulesByBusAndDateRange(
-//            @PathVariable Long busId,
-//            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
-//            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
-//        return ResponseEntity.ok(ApiResponse.of(HttpStatus.OK.value(), "Schedules retrieved successfully",
-//                scheduleService.getSchedulesByBusAndDateRange(busId, from, to)));
-//    }
-//
-//    /**
-//     * Filter schedules with a price at or below the given maximum.
-//     * Example: GET /api/schedules/price?maxPrice=500
-//     */
-//    @GetMapping("/price")
-//    public ResponseEntity<ApiResponse<List<ScheduleResponse>>> getSchedulesByMaxPrice(
-//            @RequestParam Double maxPrice) {
-//        return ResponseEntity.ok(ApiResponse.of(HttpStatus.OK.value(), "Schedules retrieved successfully",
-//                scheduleService.getSchedulesByMaxPrice(maxPrice)));
-//    }
 
     @PostMapping
     public ResponseEntity<ApiResponse<ScheduleResponse>> createSchedule(

@@ -3,9 +3,7 @@ package com.busapp.busservice.controller;
 import com.busapp.busservice.dto.ApiResponse;
 import com.busapp.busservice.dto.SeatRequest;
 import com.busapp.busservice.dto.SeatResponse;
-import com.busapp.busservice.dto.SeatStatusRequest;
 import com.busapp.busservice.dto.SeatUpdateRequest;
-import com.busapp.busservice.model.enums.SeatStatus;
 import com.busapp.busservice.model.enums.SeatType;
 import com.busapp.busservice.service.SeatService;
 import jakarta.validation.Valid;
@@ -15,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/seats")

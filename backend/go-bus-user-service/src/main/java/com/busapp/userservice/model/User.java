@@ -7,7 +7,6 @@ import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import javax.naming.Name;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;

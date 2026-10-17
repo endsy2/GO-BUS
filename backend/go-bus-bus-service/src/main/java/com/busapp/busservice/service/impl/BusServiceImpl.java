@@ -9,16 +9,13 @@ import com.busapp.busservice.mapper.BusMapper;
 import com.busapp.busservice.model.*;
 import com.busapp.busservice.model.enums.BusStatus;
 import com.busapp.busservice.model.enums.BusType;
-import com.busapp.busservice.model.enums.SeatStatus;
 import com.busapp.busservice.model.enums.SeatType;
 import com.busapp.busservice.model.repository.*;
 import com.busapp.busservice.service.BusService;
 import com.busapp.busservice.model.specification.BusSpecification;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.bouncycastle.asn1.x509.Time;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -44,7 +41,6 @@ public class BusServiceImpl implements BusService {
     private final BusMapper busMapper;
     private final ObjectMapper objectMapper;
     private final BusScheduleRepository busScheduleRepository;
-    private final ScheduleSeatRepository scheduleSeatRepository;
 
     @Override
     public List<BusResponse> getAllBuses() {
@@ -56,19 +52,6 @@ public class BusServiceImpl implements BusService {
     public BusDetailResponse getBusById(Long id) {
         Bus bus = busRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Bus not found with id: " + id));
-        return busMapper.toResponseDetail(bus);
-    }
-
-    @Override
-    public BusDetailResponse getBusByScheduleId(Long scheduleId) {
-        BusSchedule schedule = busScheduleRepository.findById(scheduleId)
-                .orElseThrow(() -> new ResourceNotFoundException("Schedule not found with id: " + scheduleId));
-
-        Bus bus = schedule.getBus();
-        if (bus == null) {
-            throw new ResourceNotFoundException("Bus not found for schedule id: " + scheduleId);
-        }
-
         return busMapper.toResponseDetail(bus);
     }
 
@@ -281,12 +264,6 @@ public class BusServiceImpl implements BusService {
             return SeatType.SLEEPER;
         }
 
-        // Check if seat number contains indicators for VIP seats
-        // Typically first row or seats with specific letters
-//        if (seatNumber.startsWith("1") || seatNumber.contains("A")) {
-//            return SeatType.VIP;
-//        }
-
         return SeatType.SEATER;
     }
 
@@ -306,24 +283,8 @@ public class BusServiceImpl implements BusService {
         bus.setBusType(request.getBusType());
         if (request.getBusStatus() != null) bus.setStatus(request.getBusStatus());
 
-//        if (request.getLayoutId() != null) {
-//            BusLayout layout = busLayoutRepository.findById(request.getLayoutId())
-//                    .orElseThrow(() -> new ResourceNotFoundException("Layout not found: " + request.getLayoutId()));
-//            bus.setLayout(layout);
-//
-//            // Recalculate total seats from new layout
-//            int totalSeats = calculateTotalSeatsFromLayout(layout);
-//            bus.setTotalSeats(totalSeats);
-//
-//            // Delete old seats and create new ones based on new layout
-//            seatRepository.deleteByBusId(id);
-            Bus savedBus = busRepository.save(bus);
-//            createSeatsFromLayout(savedBus, layout);
-//
-            return busMapper.toResponse(savedBus);
-//        } else {
-//            throw new BadRequestException("Layout ID is required to calculate total seats");
-//        }
+        Bus savedBus = busRepository.save(bus);
+        return busMapper.toResponse(savedBus);
     }
 
     @Override

@@ -24,11 +24,4 @@ public class UserPrincipal implements Principal {
         return userName;
     }
 
-    public boolean hasRole(String role) {
-        return roles != null && roles.contains(role);
-    }
-
-    public boolean hasPermission(String permission) {
-        return permissions != null && permissions.contains(permission);
-    }
 }

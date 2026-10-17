@@ -9,10 +9,8 @@ import com.busapp.userservice.model.User;
 import com.busapp.userservice.model.UserWallet;
 import com.busapp.userservice.model.WalletTransaction;
 import com.busapp.userservice.model.enums.Currency;
-import com.busapp.userservice.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Collections;
 import java.util.List;
@@ -21,7 +19,6 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class WalletMapper {
-    private final UserRepository userRepository;
 
     public WalletResponse toResponse(UserWallet wallet) {
         User user = wallet.getUser();

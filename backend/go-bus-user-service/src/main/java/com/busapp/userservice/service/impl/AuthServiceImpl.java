@@ -1,10 +1,7 @@
 package com.busapp.userservice.service.impl;
 
 import com.busapp.userservice.dto.mapper.UserMapper;
-import com.busapp.userservice.dto.mapper.WalletMapper;
 import com.busapp.userservice.dto.request.AuthRequest;
-import com.busapp.userservice.dto.request.CreateUserWalletRequest;
-import com.busapp.userservice.dto.request.RefreshTokenRequest;
 import com.busapp.userservice.dto.response.AuthResponse;
 import com.busapp.userservice.dto.response.RefreshTokenResponse;
 import com.busapp.userservice.dto.response.RegisterResponse;
@@ -14,16 +11,11 @@ import com.busapp.userservice.exception.ResourceNotFoundException;
 import com.busapp.userservice.model.Permission;
 import com.busapp.userservice.model.Role;
 import com.busapp.userservice.model.User;
-import com.busapp.userservice.model.UserWallet;
-import com.busapp.userservice.model.enums.Currency;
-import com.busapp.userservice.repository.RoleRepository;
 import com.busapp.userservice.repository.UserRepository;
-import com.busapp.userservice.repository.UserWalletRepository;
 import com.busapp.userservice.security.JwtUtil;
 import com.busapp.userservice.security.RedisTokenService;
 import com.busapp.userservice.service.AuthService;
 import com.busapp.userservice.service.RolePermissionNameCacheService;
-import com.busapp.userservice.service.WalletService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import jakarta.transaction.Transactional;
@@ -39,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -51,10 +42,6 @@ public class AuthServiceImpl implements AuthService {
     private final RedisTokenService redisTokenService;
     private final PasswordEncoder   passwordEncoder;
     private final UserMapper userMapper;
-    private final WalletMapper walletMapper;
-    private final UserWalletRepository userWalletRepository;
-    private final WalletService walletService;
-    private final RoleRepository  roleRepository;
     private final RolePermissionNameCacheService rolePermissionNameCacheService;
 
     // ── Register ──────────────────────────────────────────────────────────────

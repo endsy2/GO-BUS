@@ -16,8 +16,6 @@ public interface BusRouteRepository extends JpaRepository<BusRoute, Long> {
 
     List<BusRoute> findByOriginIgnoreCaseAndDestinationIgnoreCase(String origin, String destination);
 
-    boolean existsByOriginIgnoreCaseAndDestinationIgnoreCase(String origin, String destination);
-
     // ── Partial keyword search (for search bar / admin) ───────────────────────
 
     @Query("""
