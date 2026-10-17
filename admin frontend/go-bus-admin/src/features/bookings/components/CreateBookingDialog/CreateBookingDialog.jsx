@@ -224,7 +224,6 @@ const CreateBookingDialog = ({ open, onClose, onSuccess }) => {
       );
       
       // ALWAYS check localStorage for pending selections (backend may not have pendingUserId)
-      let restoredFromLocalStorage = false;
       try {
         const storedSelection = localStorage.getItem('pendingSeatSelection');
         if (storedSelection) {
@@ -252,7 +251,6 @@ const CreateBookingDialog = ({ open, onClose, onSuccess }) => {
                   });
                 }
               });
-              restoredFromLocalStorage = true;
             } else {
               localStorage.removeItem('pendingSeatSelection');
             }
@@ -381,7 +379,7 @@ const CreateBookingDialog = ({ open, onClose, onSuccess }) => {
         userId: currentUserId
       };
       
-      const success = sendMessage('/app/seat/deselect', message);
+      sendMessage('/app/seat/deselect', message);
       
       setSelectedSeats(prev => {
         const updated = prev.filter(s => s.id !== scheduleSeatId);
@@ -410,7 +408,7 @@ const CreateBookingDialog = ({ open, onClose, onSuccess }) => {
         userId: currentUserId
       };
       
-      const success = sendMessage('/app/seat/select', message);
+      sendMessage('/app/seat/select', message);
       
       setSelectedSeats(prev => {
         const updated = [...prev, { id: scheduleSeatId, seatNumber }];
@@ -849,7 +847,7 @@ const CreateBookingDialog = ({ open, onClose, onSuccess }) => {
                             layoutData = busDetails.layout.layout;
                           }
                           
-                          const { rows, columns, seats: layoutSeats, aisleColumns, driverColumn } = layoutData;
+                          const { columns, seats: layoutSeats, aisleColumns, driverColumn } = layoutData;
                           const aisleColsArray = aisleColumns ? String(aisleColumns).split(',').map(c => parseInt(c.trim()) - 1) : [];
                           
                           // Create a map of seat numbers to schedule seat data

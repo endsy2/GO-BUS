@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { Calendar, TrendingUp, Bus, AlertCircle, Download, TrendingDown, ChevronDown, Check, Wifi, WifiOff } from 'lucide-react';
+import { Calendar, TrendingUp, Bus, AlertCircle, TrendingDown, ChevronDown, Check, Wifi, WifiOff } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useStats } from '../../hooks/useStats';
 import { useBookingVelocity } from '../../hooks/useBookingVelocity';
@@ -210,9 +210,6 @@ const DashboardPage = () => {
               </span>
             )}
           </h1>
-          {/* <p className="text-xs sm:text-sm text-muted-foreground">
-            Real-time performance and system health across the FTA network.
-          </p> */}
         </div>
         <div className="flex gap-3">
           {/* Date Range Selector */}

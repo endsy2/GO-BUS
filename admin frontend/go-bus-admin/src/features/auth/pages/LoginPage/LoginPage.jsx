@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Input } from 'shared/components/common/Input';
 import { Button } from 'shared/components/common/Button';
 import { useLocale } from 'shared/context/LocaleContext';
 import { translations } from 'shared/locales/translations';

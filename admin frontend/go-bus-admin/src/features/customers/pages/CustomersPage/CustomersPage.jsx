@@ -14,7 +14,7 @@ import customerService from '../../services/customerService';
 import adminService from 'features/admin/services/adminService';
 import { useLocale } from 'shared/context/LocaleContext';
 import { translations } from 'shared/locales/translations';
-import { canViewCustomers, canEditCustomers, canDeleteCustomers, canCreateCustomers } from 'shared/utils/permissions';
+import { canViewCustomers, canDeleteCustomers, canCreateCustomers } from 'shared/utils/permissions';
 import useAuth from 'shared/hooks/useAuth';
 
 // ── Shared filter field styling (matches BookingFilters) ───────────────────────
@@ -34,7 +34,6 @@ const CustomersPage = () => {
   const currentUser = useAuth();
 
   const canView = canViewCustomers(currentUser);
-  const canEdit = canEditCustomers(currentUser);
   const canDelete = canDeleteCustomers(currentUser);
   const canCreate = canCreateCustomers(currentUser);
 
@@ -178,15 +177,6 @@ const CustomersPage = () => {
     }
     setCustomerToToggle(customer);
     setShowStatusDialog(true);
-  };
-
-  const handleEditClick = (customer) => {
-    if (!canEdit) {
-      addToast({ message: 'You do not have permission to edit customers', type: 'error' });
-      return;
-    }
-    setCustomerToEdit(customer);
-    setShowEditDialog(true);
   };
 
   const handleViewClick = (customer) => {

@@ -7,18 +7,6 @@ const promoService = {
     return response.data;
   },
 
-  // Get promo code by ID
-  getPromoById: async (id) => {
-    const response = await axiosInstance.get(`/promos/${id}`);
-    return response.data;
-  },
-
-  // Get promo code by code
-  getPromoByCode: async (code) => {
-    const response = await axiosInstance.get(`/promos/code/${code}`);
-    return response.data;
-  },
-
   // Create promo code
   createPromo: async (promoData) => {
     const response = await axiosInstance.post('/promos', promoData);

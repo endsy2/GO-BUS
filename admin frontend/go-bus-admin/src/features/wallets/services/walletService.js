@@ -7,12 +7,6 @@ const walletService = {
     return response.data;
   },
 
-  // Get wallet by user ID
-  getWalletByUser: async (userId) => {
-    const response = await axiosInstance.get(`/admin/wallets/user/${userId}`);
-    return response.data;
-  },
-
   // Get wallet by ID
   getWalletById: async (walletId) => {
     const response = await axiosInstance.get(`/admin/wallets/${walletId}`);

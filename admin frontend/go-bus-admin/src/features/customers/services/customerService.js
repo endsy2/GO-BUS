@@ -3,10 +3,6 @@ import axiosInstance from 'services/axiosConfig';
 // Wraps backend AdminUserController (/api/admin/users/**).
 // axiosInstance already prefixes /api, so paths here start with /admin/users.
 const customerService = {
-  getCustomers: async (params = {}) => {
-    const response = await axiosInstance.get('/admin/users', { params });
-    return response.data;
-  },
 
   // Legacy "specification" shape used by CustomersPage. Translates to the real
   // AdminUserController.getUsers params before hitting GET /admin/users.
@@ -66,16 +62,6 @@ const customerService = {
     return response.data;
   },
 
-  setCustomerStatus: async (customerId, active) => {
-    const response = await axiosInstance.patch(`/admin/users/${customerId}/status`, { active });
-    return response.data;
-  },
-
-  resetCustomerPassword: async (customerId, newPassword) => {
-    const response = await axiosInstance.patch(`/admin/users/${customerId}/reset-password`, { newPassword });
-    return response.data;
-  },
-
   unlinkGoogle: async (customerId) => {
     const response = await axiosInstance.patch(`/admin/users/${customerId}/unlink-google`);
     return response.data;
@@ -98,10 +84,6 @@ const customerService = {
     return response.data;
   },
 
-  deleteCustomer: async (customerId) => {
-    const response = await axiosInstance.delete(`/admin/users/${customerId}`);
-    return response.data;
-  },
 };
 
 export default customerService;

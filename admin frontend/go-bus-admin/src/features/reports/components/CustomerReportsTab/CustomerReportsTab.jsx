@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Download, Users, Award, PieChart, Calendar, Clock } from 'lucide-react';
 import { Button } from 'shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from 'shared/components/ui/card';
-import { Input } from 'shared/components/common/Input';
 import { DatePicker } from 'shared/components/ui/date-picker';
 import {
   Select,
@@ -11,14 +10,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from 'shared/components/ui/select';
-import { useLocale } from 'shared/context/LocaleContext';
-import { translations } from 'shared/locales/translations';
 import { useToast } from 'shared/components/ui/toast';
 import reportService from '../../services/reportService';
 
 const CustomerReportsTab = () => {
-  const { locale } = useLocale();
-  const t = (key) => translations[locale]?.[key] || translations.en[key] || key;
   const { addToast } = useToast();
 
   // Active Customer Report State

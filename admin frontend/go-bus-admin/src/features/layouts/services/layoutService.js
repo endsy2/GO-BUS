@@ -13,12 +13,6 @@ const layoutService = {
     return response.data;
   },
 
-  // Get layout by name
-  getLayoutByName: async (name) => {
-    const response = await axiosInstance.get(`/layouts/name/${name}`);
-    return response.data;
-  },
-
   // Create layout
   createLayout: async (layoutData) => {
     // Convert layout object to JSON string for API (backend expects String)
