@@ -1,15 +1,14 @@
 # ─── Stage 1: Build ─────────────────────────────
-FROM gradle:8.5-jdk17 AS build
+# Same Gradle version as gradle-wrapper.properties. Using the preinstalled
+# gradle instead of ./gradlew avoids downloading Gradle during every build.
+FROM gradle:8.10.2-jdk17 AS build
 WORKDIR /app
 
 # Copy entire project
 COPY . .
 
-# FIX: ensure gradlew is executable
-RUN chmod +x gradlew
-
 # Build the application
-RUN ./gradlew build -x test --no-daemon
+RUN gradle build -x test --no-daemon
 
 
 # ─── Stage 2: Runtime ───────────────────────────
