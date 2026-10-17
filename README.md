@@ -156,6 +156,16 @@ npm start
 | MinIO console | http://localhost:9001 — `minioadmin` / `minioadmin` |
 | RedisInsight | http://localhost:5540 |
 
+**Default admin:** on startup, user-service creates the permission catalogue, the
+`ROLE_ADMIN` role (granted every permission), and the user `admin@busapp.com`. No SQL is
+needed. Its password comes from `ADMIN_DEFAULT_PASSWORD` (dev default: `admin123`; required in
+prod). To also add `ROLE_USER` and `ROLE_BUS_OPERATOR`, run the optional, idempotent seed
+after user-service has started once:
+
+```bash
+psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d busbooking -f backend/seed_roles_permissions.sql
+```
+
 ### Production
 
 ```bash
