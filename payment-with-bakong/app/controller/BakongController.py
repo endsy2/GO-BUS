@@ -1,10 +1,8 @@
-
-from fastapi import APIRouter, Query, Body, Header, HTTPException
+from fastapi import APIRouter, Query, Body, HTTPException
 from pydantic import BaseModel
 from app.service import BakongService
 
 import logging
-from typing import Optional
 
 router = APIRouter(prefix="/bakong", tags=["bakong"])
 
@@ -52,15 +50,11 @@ async def generate_bakong_qr(
 async def verify_md5_endpoint(
     request: VerifyMD5Request = Body(...)
 ):
-        # 2️⃣ Call service and pass token
-        result = await BakongService.verifyMD5(request.md5)
-        
-        # 3️⃣ Return success response matching BakongResponse DTO
-        return {
-            "data": result
-        }
-    
-
+    result = await BakongService.verifyMD5(request.md5)
+    # Response shape matches the BakongResponse DTO in the Java services
+    return {
+        "data": result
+    }
 
 
 @router.post("/payment_info")
