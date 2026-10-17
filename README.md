@@ -104,6 +104,16 @@ docker compose up --build
 
 This starts all five services plus PostgreSQL, Redis, RabbitMQ, and MinIO.
 
+**Default admin:** on startup, user-service creates the permission catalogue, the
+`ROLE_ADMIN` role (granted every permission), and the user `admin@busapp.com` /
+`admin123`. No SQL is needed. Change the password after the first login.
+To also add `ROLE_USER` and `ROLE_BUS_OPERATOR`, run the optional, idempotent seed
+after user-service has started once:
+
+```bash
+psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d busbooking -f backend/seed_roles_permissions.sql
+```
+
 **Run a single service locally** (with infra already up):
 
 ```bash
