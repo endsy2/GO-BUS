@@ -16,8 +16,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data_dev:/var/lib/postgresql/data
-      - ./seed_roles_permissions.sql:/docker-entrypoint-initdb.d/01-seed_roles_permissions.sql
-      - ./seed_bus_layouts.sql:/docker-entrypoint-initdb.d/02-seed_bus_layouts.sql
+      # No seed scripts in /docker-entrypoint-initdb.d: they run before the services
+      # create their schemas (Hibernate ddl-auto), so they fail and abort the first boot.
+      # Default permissions + admin are created by user-service's DataInitializer.
+      # Optional seeds (seed_roles_permissions.sql, seed_bus_layouts.sql) are run with
+      # psql after the services have started once.
     networks:
       - busapp-network
     healthcheck:
