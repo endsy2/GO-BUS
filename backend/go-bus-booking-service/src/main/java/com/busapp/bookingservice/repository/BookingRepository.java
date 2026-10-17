@@ -16,10 +16,6 @@ import java.util.Map;
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long>, JpaSpecificationExecutor<Booking> {
     List<Booking> findByUserId(Long userId);
-    List<Booking> findByScheduleId(Long scheduleId);
-    List<Booking> findByBookingStatus(BookingStatus status);
-    List<Booking> findByPaymentStatus(PaymentStatus paymentStatus);
-    List<Booking> findByUserIdAndBookingStatus(Long userId, BookingStatus status);
 
     // Report queries
     @Query("SELECT COUNT(b) FROM Booking b WHERE b.createdAt BETWEEN :startDate AND :endDate")
@@ -56,10 +52,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long>, JpaSpec
 
     // Bus-specific queries for reports
     Long countByScheduleIdAndBookingStatus(Long scheduleId, BookingStatus status);
-
-    @Query("SELECT COUNT(b) FROM Booking b " +
-            "WHERE b.scheduleId = :scheduleId AND b.bookingStatus = 'CONFIRMED'")
-    Long countConfirmedBookingsByScheduleId(@Param("scheduleId") Long scheduleId);
 
     @Query("SELECT SUM(b.totalAmount) FROM Booking b " +
             "WHERE b.scheduleId = :scheduleId AND b.bookingStatus = 'CONFIRMED' " +
@@ -183,16 +175,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long>, JpaSpec
       AND b.is_deleted = false
     """, nativeQuery = true)
     List<Object[]> getUserLifetimeStats(@Param("userId") Long userId);
-
-    // Soft delete queries
-    @Query("SELECT b FROM Booking b WHERE b.isDeleted = false")
-    List<Booking> findAllActive();
-
-    @Query("SELECT b FROM Booking b WHERE b.userId = :userId AND b.isDeleted = false")
-    List<Booking> findActiveByUserId(@Param("userId") Long userId);
-
-    @Query("SELECT b FROM Booking b WHERE b.scheduleId = :scheduleId AND b.isDeleted = false")
-    List<Booking> findActiveByScheduleId(@Param("scheduleId") Long scheduleId);
 
     // Dashboard statistics queries
     Long countByBookingStatusInAndIsDeleted(List<BookingStatus> statuses, Boolean isDeleted);

@@ -1,6 +1,5 @@
 package com.busapp.bookingservice.dto.request;
 
-import com.busapp.bookingservice.model.enums.PaymentMethodType;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -21,7 +20,4 @@ public class BookingRequest {
 
     /** Phone number for booking contact. */
     private String phoneNumber;
-
-//    @NotNull(message = "Payment method is required")
-//    private PaymentMethodType paymentMethod;
 }

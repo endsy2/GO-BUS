@@ -37,15 +37,6 @@ public class ScheduleSeatServiceImpl implements ScheduleSeatService {
     private final UserUtil userUtil;
 
     @Override
-    public List<ScheduleSeatResponse> getSeatsBySchedule(Long scheduleId) {
-        log.info("[SEAT_SERVICE] Getting seats by schedule - scheduleId={}", scheduleId);
-        List<ScheduleSeatResponse> seats = scheduleSeatMapper.toResponseList(
-                scheduleSeatRepository.findByScheduleId(scheduleId));
-        log.debug("[SEAT_SERVICE] Found {} seats for schedule {}", seats.size(), scheduleId);
-        return seats;
-    }
-
-    @Override
     public ScheduleSeatDetailResponse getScheduleSeatsWithBusDetails(Long scheduleId) {
         log.info("[SEAT_SERVICE] Getting schedule seats with bus details - scheduleId={}", scheduleId);
         
@@ -83,31 +74,6 @@ public class ScheduleSeatServiceImpl implements ScheduleSeatService {
         log.debug("[SEAT_SERVICE] Found seat - status={}, bookingId={}", 
                 scheduleSeat.getStatus(), scheduleSeat.getBookingId());
         return scheduleSeatMapper.toResponse(scheduleSeat);
-    }
-
-    @Override
-    @Transactional
-    public ScheduleSeatResponse updateScheduleSeatStatus(Long scheduleId, Long seatId, 
-                                                         SeatStatus status, Long bookingId) {
-        log.info("[SEAT_SERVICE] Updating seat status - scheduleId={}, seatId={}, newStatus={}, bookingId={}", 
-                scheduleId, seatId, status, bookingId);
-        
-        ScheduleSeat scheduleSeat = scheduleSeatRepository.findByScheduleIdAndSeatId(scheduleId, seatId)
-                .orElseThrow(() -> {
-                    log.error("[SEAT_SERVICE] Seat not found for status update - scheduleId={}, seatId={}", 
-                            scheduleId, seatId);
-                    return new ResourceNotFoundException("Seat " + seatId + " not found for schedule " + scheduleId);
-                });
-        
-        SeatStatus oldStatus = scheduleSeat.getStatus();
-        scheduleSeat.setStatus(status);
-        scheduleSeat.setBookingId(bookingId);
-        
-        ScheduleSeatResponse response = scheduleSeatMapper.toResponse(scheduleSeatRepository.save(scheduleSeat));
-        log.info("[SEAT_SERVICE] Seat status updated successfully - scheduleId={}, seatId={}, oldStatus={}, newStatus={}", 
-                scheduleId, seatId, oldStatus, status);
-        
-        return response;
     }
 
     @Override

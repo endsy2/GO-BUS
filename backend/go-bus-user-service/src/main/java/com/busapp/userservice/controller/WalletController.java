@@ -3,11 +3,9 @@ package com.busapp.userservice.controller;
 import com.busapp.userservice.dto.admin.PagedResponse;
 import com.busapp.userservice.dto.request.TransactionFilterRequest;
 import com.busapp.userservice.dto.request.WalletLoginRequest;
-import com.busapp.userservice.dto.request.WalletTransactionRequest;
 import com.busapp.userservice.dto.response.ApiResponse;
 import com.busapp.userservice.dto.response.WalletBalanceResponse;
 import com.busapp.userservice.dto.response.WalletResponse;
-import com.busapp.userservice.dto.response.WalletTransactionDetailResponse;
 import com.busapp.userservice.dto.response.WalletTransactionResponse;
 import com.busapp.userservice.model.enums.TransactionStatus;
 import com.busapp.userservice.model.enums.TransactionType;
@@ -19,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController

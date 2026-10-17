@@ -44,17 +44,6 @@ public class WebSocketServiceImpl implements WebSocketService {
     }
 
     @Override
-    public void broadcastPaymentStatus(PaymentStatusEvent event) {
-        try {
-        messagingTemplate.convertAndSend("/topic/payment/" + event.getPaymentId(), event);
-        log.info("Broadcasted payment status event: type={}, paymentId={}, status={}",
-                event.getType(), event.getPaymentId(), event.getStatus());
-    } catch (Exception e) {
-        log.error("Failed to broadcast payment status event", e);
-    }
-}
-
-    @Override
     public void broadcastPaymentStatusToUser(Long userId, PaymentStatusEvent event) {
         try {
             messagingTemplate.convertAndSendToUser(

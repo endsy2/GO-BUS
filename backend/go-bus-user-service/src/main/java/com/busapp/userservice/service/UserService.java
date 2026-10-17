@@ -45,8 +45,6 @@ public interface UserService {
     
     UserResponseDetail updateProfile(Long userId, UpdateProfileRequest request);
 
-//    UserResponseDetail updateEmployee(Long id, UpdateEmployeeRequest request);
-
     void deleteUser(Long id);
 
     Page<UserResponseDetail> filterBySpec (int pageStart, int pageSize, Long userId, String email, String phone, String googleId, String userName, Boolean isEmployee,Boolean isDeleted,Boolean isActive);

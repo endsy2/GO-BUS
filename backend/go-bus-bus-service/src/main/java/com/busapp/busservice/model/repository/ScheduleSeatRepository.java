@@ -40,23 +40,11 @@ public interface ScheduleSeatRepository extends JpaRepository<ScheduleSeat, Long
     List<ScheduleSeat> findByBookingId(Long bookingId);
     
     /**
-     * Check if a seat exists for a schedule
-     */
-    boolean existsByScheduleIdAndSeatId(Long scheduleId, Long seatId);
-    
-    /**
      * Delete all schedule seats for a specific schedule
      */
     @Modifying
     @Query("DELETE FROM ScheduleSeat ss WHERE ss.schedule.id = :scheduleId")
     void deleteByScheduleId(@Param("scheduleId") Long scheduleId);
-    
-    /**
-     * Delete all schedule seats for a specific seat
-     */
-    @Modifying
-    @Query("DELETE FROM ScheduleSeat ss WHERE ss.seat.id = :seatId")
-    void deleteBySeatId(@Param("seatId") Long seatId);
     
     /**
      * Find schedule seats by schedule ID and seat IDs

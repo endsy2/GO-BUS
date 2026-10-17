@@ -7,7 +7,6 @@ import com.busapp.bookingservice.dto.response.TicketResponse;
 import com.busapp.bookingservice.model.enums.TicketStatus;
 import com.busapp.bookingservice.service.TicketService;
 import com.busapp.bookingservice.util.UserUtil;
-import com.thoughtworks.xstream.core.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -28,7 +27,6 @@ public class TicketController {
     @GetMapping
     public ResponseEntity<ApiResponse<Page<TicketDetailResponse>>> filterTickets(
             @RequestParam(required = false) Long bookingId,
-//            @RequestParam(required = false) Long userId,
             @RequestParam(required = false) Long scheduleId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime issuedFrom,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime issuedTo,
@@ -50,14 +48,6 @@ public class TicketController {
         return ResponseEntity.ok(ApiResponse.of(HttpStatus.OK.value(), 
                 "Tickets retrieved successfully", page));
     }
-
-//    @GetMapping("/booking/{bookingId}")
-//    public ResponseEntity<ApiResponse<TicketResponse>> getTicketByBookingId(
-//            @PathVariable Long bookingId) {
-//        return ResponseEntity.ok(ApiResponse.of(HttpStatus.OK.value(), 
-//                "Ticket retrieved successfully",
-//                ticketService.getTicketByBookingId(bookingId)));
-//    }
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<TicketDetailResponse>> getTicketById(@PathVariable Long id) {

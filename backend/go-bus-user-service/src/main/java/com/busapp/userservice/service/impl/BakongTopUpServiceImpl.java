@@ -6,7 +6,6 @@ import com.busapp.userservice.dto.request.TopUpBakongRequest;
 import com.busapp.userservice.dto.response.BakongCheckTopUpResponse;
 import com.busapp.userservice.dto.response.BakongQrData;
 import com.busapp.userservice.dto.response.BakongResponse;
-import com.busapp.userservice.dto.response.TopUpBakongResponse;
 import com.busapp.userservice.exception.*;
 import com.busapp.userservice.model.TopUp;
 import com.busapp.userservice.model.User;
@@ -22,13 +21,7 @@ import com.busapp.userservice.repository.UserRepository;
 import com.busapp.userservice.repository.UserWalletRepository;
 import com.busapp.userservice.repository.WalletTransactionRepository;
 import com.busapp.userservice.service.BakongTopUpService;
-import com.busapp.userservice.util.BakongUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kh.gov.nbc.bakong_khqr.BakongKHQR;
-import kh.gov.nbc.bakong_khqr.model.KHQRCurrency;
-import kh.gov.nbc.bakong_khqr.model.KHQRData;
-import kh.gov.nbc.bakong_khqr.model.KHQRResponse;
-import kh.gov.nbc.bakong_khqr.model.MerchantInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -53,7 +46,6 @@ public class BakongTopUpServiceImpl implements BakongTopUpService {
     private final UserWalletRepository walletRepository;
     private final TopUpRepository topUpRepository;
     private final WalletTransactionRepository transactionRepository;
-    private final BakongUtil bakongTokenService;
     private final RestTemplate restTemplate;
     private final ObjectMapper mapper;
     private final ObjectMapper objectMapper;
@@ -268,7 +260,7 @@ public class BakongTopUpServiceImpl implements BakongTopUpService {
                             checkTopUpRequest.getHash(), responseBody);
 
                     BakongCheckTopUpResponse response = mapper.readValue(responseBody, BakongCheckTopUpResponse.class);
-                    log.debug("[BAKONG TOP-UP] Response status code - md5= BakongCheckTopUpResponse response = objectMapper.convertValue(bakongResponse.getData(), BakongCheckTopUpResponse.class);{}, status={}",
+                    log.debug("[BAKONG TOP-UP] Response status code - md5={}, status={}",
                             checkTopUpRequest.getHash(), response.getData().getStatus());
 
                     // Handle terminal states
@@ -277,19 +269,7 @@ public class BakongTopUpServiceImpl implements BakongTopUpService {
                                 checkTopUpRequest.getHash(), userId);
                         markSuccessAsync(topUp.getId());
                         return;
-//                        case 15 -> {
-//                            log.warn("[BAKONG TOP-UP] Payment FAILED - md5={}, userId={}",
-//                                    checkTopUpRequest.getHash(), userId);
-//                            markFailureAsync(TopUpStatus.FAILED, topUp.getId(), "Transaction failed");
-//                            return;
-//                        }
-//                        case 46 -> {
-//                            log.warn("[BAKONG TOP-UP] Payment EXPIRED - md5={}, userId={}",
-//                                    checkTopUpRequest.getHash(), userId);
-//                            markFailureAsync(TopUpStatus.EXPIRED, topUp.getId(), "Transaction expired");
-//                            return;
-//                        }
-                    } else {// PENDING — wait and retry
+                    } else { // PENDING — wait and retry
                         log.debug("[BAKONG TOP-UP] Payment PENDING - md5={}, status={}, retrying in {}ms",
                                 checkTopUpRequest.getHash(), response.getData().getStatus(), pollIntervalMs);
                         Thread.sleep(pollIntervalMs);

@@ -1,6 +1,5 @@
 package com.busapp.busservice.model.specification;
 
-
 import com.busapp.busservice.model.Bus;
 import com.busapp.busservice.model.BusRoute;
 import com.busapp.busservice.model.BusSchedule;
@@ -9,7 +8,6 @@ import jakarta.persistence.criteria.JoinType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Slf4j

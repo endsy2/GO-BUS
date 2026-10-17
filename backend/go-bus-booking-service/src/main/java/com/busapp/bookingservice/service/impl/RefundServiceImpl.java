@@ -13,7 +13,6 @@ import com.busapp.bookingservice.dto.response.RefundStatisticsResponse;
 import com.busapp.bookingservice.exception.BadRequestException;
 import com.busapp.bookingservice.exception.ResourceNotFoundException;
 import com.busapp.bookingservice.model.Booking;
-import com.busapp.bookingservice.model.BookingSeat;
 import com.busapp.bookingservice.model.Refund;
 import com.busapp.bookingservice.model.enums.BookingStatus;
 import com.busapp.bookingservice.model.enums.PaymentStatus;
@@ -91,10 +90,6 @@ public class RefundServiceImpl implements RefundService {
                 .status(RefundStatus.PENDING)
                 .build();
 
-        // Update booking status
-//        booking.setBookingStatus(BookingStatus.REFUND_REQUESTED);
-//        bookingRepository.save(booking);
-
         Refund savedRefund = refundRepository.save(refund);
 
         log.info("[REFUND] Refund request created: {}", savedRefund.getId());
@@ -106,9 +101,6 @@ public class RefundServiceImpl implements RefundService {
             bookingResponse,
             "User ID: " + userId + " | Reason: " + request.getReason()
         );
-
-        // Live update: refund affects the booking row + dashboard pending-refunds counter
-//        webSocketService.broadcastBookingUpdate("UPDATED", bookingResponse);
 
         return toRefundResponse(savedRefund);
     }
@@ -122,22 +114,6 @@ public class RefundServiceImpl implements RefundService {
                 ? refundRepository.findByUserIdAndStatus(userId, status, pageable)
                 : refundRepository.findByUserId(userId, pageable);
         return refunds.map(this::buildRefundDetailResponse);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public RefundResponse getRefundById(Long refundId, Long userId) {
-        log.info("[REFUND] User {} fetching refund {}", userId, refundId);
-
-        Refund refund = refundRepository.findById(refundId)
-                .orElseThrow(() -> new ResourceNotFoundException("Refund not found: " + refundId));
-
-        // Verify user owns the booking
-        if (!refund.getBooking().getUserId().equals(userId)) {
-            throw new BadRequestException("You can only view your own refunds");
-        }
-
-        return toRefundResponse(refund);
     }
 
     @Override

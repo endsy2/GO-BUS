@@ -1,22 +1,16 @@
 package com.busapp.userservice.dto.mapper;
 
-import com.busapp.userservice.dto.admin.PermissionResponse;
-import com.busapp.userservice.dto.admin.RoleResponse;
 import com.busapp.userservice.dto.request.UserRequest;
-import com.busapp.userservice.dto.response.UserBasicResponse;
 import com.busapp.userservice.dto.response.UserResponseDetail;
 import com.busapp.userservice.model.User;
 import com.busapp.userservice.repository.RoleRepository;
 import com.busapp.userservice.service.RolePermissionCacheService;
-import com.busapp.userservice.service.UserService;
 import com.busapp.userservice.util.MinioUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -54,30 +48,6 @@ public class UserMapper {
             response.setRoles(rolePermissionCacheService.getRolesWithPermissions(roleIds));
         }
 
-        return response;
-    }
-
-    public UserBasicResponse toBasicResponse(User user) {
-        return UserBasicResponse.builder()
-                .id(user.getId())
-                .userName(user.getUserName())
-                .fullName(user.getFullName())
-                .email(user.getEmail())
-                .phone(user.getPhone())
-                .build();
-    }
-
-    public List<UserBasicResponse> toBasicResponseList(List<User> users) {
-        return users.stream()
-                .map(this::toBasicResponse)
-                .collect(Collectors.toList());
-    }
-
-    public List<UserResponseDetail> toListResponse(List<User> users) {
-        List<UserResponseDetail> response = new ArrayList<>();
-        for (User user : users) {
-            response.add(toResponse(user));
-        }
         return response;
     }
 

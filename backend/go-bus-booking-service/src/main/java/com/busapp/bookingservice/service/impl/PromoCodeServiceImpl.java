@@ -2,7 +2,6 @@ package com.busapp.bookingservice.service.impl;
 
 import com.busapp.bookingservice.dto.request.PromoCodeRequest;
 import com.busapp.bookingservice.dto.response.PromoCodeResponse;
-import com.busapp.bookingservice.exception.BadRequestException;
 import com.busapp.bookingservice.exception.DuplicateResourceException;
 import com.busapp.bookingservice.exception.ResourceNotFoundException;
 import com.busapp.bookingservice.model.PromoCode;

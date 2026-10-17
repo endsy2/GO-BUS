@@ -11,14 +11,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from 'shared/components/ui/select';
-import { useLocale } from 'shared/context/LocaleContext';
-import { translations } from 'shared/locales/translations';
 import { useToast } from 'shared/components/ui/toast';
 import reportService from '../../services/reportService';
 
 const OperationalReportsTab = () => {
-  const { locale } = useLocale();
-  const t = (key) => translations[locale]?.[key] || translations.en[key] || key;
   const { addToast } = useToast();
 
   // Booking Report State

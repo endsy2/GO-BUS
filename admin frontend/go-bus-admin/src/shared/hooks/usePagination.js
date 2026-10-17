@@ -4,7 +4,6 @@ import { useState, useCallback } from 'react';
  * Shared pagination constants — import these everywhere instead of hard-coding.
  */
 export const DEFAULT_PAGE_SIZE = 15;
-export const PAGE_SIZE_OPTIONS = [15, 30, 50];
 
 /**
  * usePagination — lightweight hook for managing 0-based pagination state.

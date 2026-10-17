@@ -103,24 +103,6 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     // ── Admin ──────────────────────────────────────────────────────────────────
 
-//    @Override
-//    public List<ScheduleResponse> getSchedulesByDateRange(LocalDateTime from, LocalDateTime to) {
-//        return scheduleRepository.findByDepartureDateBetween(from, to)
-//                .stream().map(this::toResponse).collect(Collectors.toList());
-//    }
-//
-//    @Override
-//    public List<ScheduleResponse> getSchedulesByBusAndDateRange(Long busId, LocalDateTime from, LocalDateTime to) {
-//        return scheduleRepository.findByBusIdAndDepartureDateBetween(busId, from, to)
-//                .stream().map(this::toResponse).collect(Collectors.toList());
-//    }
-//
-//    @Override
-//    public List<ScheduleResponse> getSchedulesByMaxPrice(Double maxPrice) {
-//        return scheduleRepository.findByPriceLessThanEqual(maxPrice)
-//                .stream().map(this::toResponse).collect(Collectors.toList());
-//    }
-
     @Override
     public Page<ScheduleResponse> getSchedulesWithSpecification(Long routeId, LocalDateTime from, LocalDateTime to, Double maxPrice, Integer pageNo, Integer pageSize) {
         PageRequest pageRequest = PageRequest.of(pageNo - 1, pageSize);

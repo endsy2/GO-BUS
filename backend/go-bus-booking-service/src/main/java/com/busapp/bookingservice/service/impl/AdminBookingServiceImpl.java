@@ -2,26 +2,19 @@ package com.busapp.bookingservice.service.impl;
 
 import com.busapp.bookingservice.client.BusClient;
 import com.busapp.bookingservice.client.UserClient;
-import com.busapp.bookingservice.dto.request.RefundApprovalRequest;
 import com.busapp.bookingservice.dto.response.BookingResponse;
 import com.busapp.bookingservice.dto.request.AdminBookingFilterRequest;
-import com.busapp.bookingservice.dto.response.PagedResponse;
-import com.busapp.bookingservice.dto.response.RefundResponse;
 import com.busapp.bookingservice.dto.response.UserStatusResponse;
-import com.busapp.bookingservice.exception.BadRequestException;
 import com.busapp.bookingservice.exception.ResourceNotFoundException;
 import com.busapp.bookingservice.dto.mapper.BookingMapper;
 import com.busapp.bookingservice.model.Booking;
 import com.busapp.bookingservice.model.Payment;
-import com.busapp.bookingservice.model.Refund;
 import com.busapp.bookingservice.model.Ticket;
 import com.busapp.bookingservice.model.enums.BookingStatus;
 import com.busapp.bookingservice.model.enums.PaymentMethodType;
 import com.busapp.bookingservice.model.enums.PaymentStatus;
-import com.busapp.bookingservice.model.enums.RefundStatus;
 import com.busapp.bookingservice.repository.BookingRepository;
 import com.busapp.bookingservice.repository.PaymentRepository;
-import com.busapp.bookingservice.repository.RefundRepository;
 import com.busapp.bookingservice.repository.spec.BookingSpecification;
 import com.busapp.bookingservice.service.AdminBookingService;
 import com.busapp.bookingservice.service.TelegramNotificationService;
@@ -34,14 +27,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.telegram.telegrambots.meta.api.methods.stickers.AddStickerToSet;
 
-import java.awt.image.BufferStrategy;
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -51,7 +39,6 @@ public class AdminBookingServiceImpl implements AdminBookingService {
     private final BookingRepository bookingRepository;
     private final BookingMapper     bookingMapper;
     private final PaymentRepository paymentRepository;
-    private final RefundRepository refundRepository;
     private final TelegramNotificationService telegramNotificationService;
     private final BusClient busClient;
     private final WebSocketService webSocketService;

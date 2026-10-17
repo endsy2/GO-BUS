@@ -10,7 +10,6 @@ import com.busapp.bookingservice.dto.mapper.PaymentMapper;
 import com.busapp.bookingservice.dto.request.BakongRequest;
 import com.busapp.bookingservice.dto.request.CheckTransactionRequest;
 import com.busapp.bookingservice.dto.response.BakongCheckTopUpResponse;
-import com.busapp.bookingservice.dto.response.BakongQrResponse;
 import com.busapp.bookingservice.dto.response.BakongResponse;
 import com.busapp.bookingservice.exception.*;
 import com.busapp.bookingservice.model.Booking;
@@ -60,8 +59,6 @@ public class BakongServiceImpl implements BakongService {
     @Value("${bakong.account-id}")
     private String bakongAccountId;
 
-    @Value("${bakong.acquiring-bank}")
-    private String acquiringBank;
 
     @Value("${bakong.merchant-name}")
     private String merchantName;
@@ -69,8 +66,6 @@ public class BakongServiceImpl implements BakongService {
     @Value("${bakong.mobile-number}")
     private String mobileNumber;
 
-    @Value("${bakong.store-label}")
-    private String storeLabel;
 
     @Value("${bakong.base-url}")
     private String baseUrl;
@@ -307,8 +302,6 @@ public class BakongServiceImpl implements BakongService {
                     kv("attempts", pollCount));
             markFailureAsync(PaymentStatus.TIMEOUT, bookingId, "Transaction check timed out");
 
-            // Return timeout response
-//            return createErrorResponse(408, "Transaction check timed out");
             throw new PaymentTimeoutException(
                     "Transaction check timed out after " + pollCount + " attempts for booking ID: " + bookingId);
 
@@ -362,16 +355,6 @@ public class BakongServiceImpl implements BakongService {
     }
 
     /**
-     * Create error response - extracted to avoid duplication
-     */
-    private BakongResponse createErrorResponse(int code, String message) {
-        BakongResponse response = new BakongResponse();
-        response.setResponseCode(code);
-        response.setResponseMessage(message);
-        return response;
-    }
-
-    /**
      * Finalise a successful payment.
      * NOTE: @Async on a self-invoked method is intentionally not used here because Spring's proxy
      * cannot intercept internal calls. The caller (checkingTransaction) returns the response first,
@@ -404,31 +387,8 @@ public class BakongServiceImpl implements BakongService {
         }
     }
 
-    @Override
-    @Transactional
-    public void createPending(String md5, Currency currency, Double amount, Long bookingId) {
-        // Idempotent — skip if md5 already exists
-        if (paymentRepository.findByTransactionId(md5).isPresent()) {
-            log.info("Pending payment already exists for md5={}, skipping", md5);
-            return;
-        }
-        Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
-
-        Payment payment = Payment.builder()
-                .booking(booking)
-                .amount(amount)
-                .currency(currency)
-                .method(PaymentMethodType.BAKONG)
-                .status(PaymentStatus.PENDING)
-                .paidAt(LocalDateTime.now())
-                .build();
-
-        paymentRepository.save(payment);
-        log.info("Pending payment created for md5={} bookingId={}", md5, bookingId);
-    }
-
     // ─────────────────────────────────────────────
-    // 4. Mark SUCCESS (unchanged, already correct)
+    // 4. Mark SUCCESS
     // ─────────────────────────────────────────────
 
     @Override
@@ -538,7 +498,7 @@ public class BakongServiceImpl implements BakongService {
     }
 
     // ─────────────────────────────────────────────
-    // 5. Mark FAILURE (fixed: typo + wrong status)
+    // 5. Mark FAILURE
     // ─────────────────────────────────────────────
 
     @Override
@@ -601,23 +561,13 @@ public class BakongServiceImpl implements BakongService {
     }
 
     // ─────────────────────────────────────────────
-    // 6. Find by md5 (unchanged)
+    // 6. Find by md5
     // ─────────────────────────────────────────────
 
     @Override
     public Payment findByBookingId(Long bookingId) {
         return paymentRepository.findByBookingId(bookingId)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found for Booking ID: " + bookingId));
-    }
-
-    // ─────────────────────────────────────────────
-    // 7. paymentInfo stub (implement when ready)
-    // ─────────────────────────────────────────────
-
-    @Override
-    public void paymentInfo() {
-        // TODO: implement payment summary/info logic
-        log.info("paymentInfo called — not yet implemented");
     }
 
     // ─────────────────────────────────────────────

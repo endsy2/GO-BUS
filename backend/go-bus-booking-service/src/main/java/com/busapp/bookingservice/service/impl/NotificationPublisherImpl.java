@@ -4,7 +4,6 @@ import com.busapp.bookingservice.config.RabbitMQConfig;
 import com.busapp.bookingservice.dto.event.NotificationEvent;
 import com.busapp.bookingservice.dto.event.NotificationPayload;
 import com.busapp.bookingservice.dto.response.BookingResponse;
-import com.busapp.bookingservice.dto.response.PaymentResponse;
 import com.busapp.bookingservice.service.NotificationPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,59 +51,6 @@ public class NotificationPublisherImpl implements NotificationPublisher {
                 .build();
 
         publishEvent(RabbitMQConfig.BOOKING_CANCELLED_KEY, event);
-    }
-
-    @Override
-    public void publishPaymentCompleted(BookingResponse booking, PaymentResponse payment) {
-        NotificationEvent event = NotificationEvent.builder()
-                .eventId(UUID.randomUUID().toString())
-                .type(NotificationEvent.NotificationType.PAYMENT_COMPLETED)
-                .message("Payment completed successfully")
-                .payload(NotificationPayload.builder()
-                        .booking(booking)
-                        .payment(payment)
-                        .build())
-                .timestamp(LocalDateTime.now())
-                .retryCount(0)
-                .build();
-
-        publishEvent(RabbitMQConfig.PAYMENT_COMPLETED_KEY, event);
-    }
-
-    @Override
-    public void publishRefundProcessed(Long bookingId, Double amount, String reason) {
-        NotificationEvent event = NotificationEvent.builder()
-                .eventId(UUID.randomUUID().toString())
-                .type(NotificationEvent.NotificationType.REFUND_PROCESSED)
-                .message("Refund processed")
-                .payload(NotificationPayload.builder()
-                        .bookingId(bookingId)
-                        .refundAmount(amount)
-                        .reason(reason)
-                        .build())
-                .timestamp(LocalDateTime.now())
-                .retryCount(0)
-                .build();
-
-        publishEvent(RabbitMQConfig.REFUND_PROCESSED_KEY, event);
-    }
-
-    @Override
-    public void publishAdminAction(String action, BookingResponse booking, String adminInfo) {
-        NotificationEvent event = NotificationEvent.builder()
-                .eventId(UUID.randomUUID().toString())
-                .type(NotificationEvent.NotificationType.ADMIN_ACTION)
-                .message("Admin action performed")
-                .payload(NotificationPayload.builder()
-                        .booking(booking)
-                        .action(action)
-                        .adminInfo(adminInfo)
-                        .build())
-                .timestamp(LocalDateTime.now())
-                .retryCount(0)
-                .build();
-
-        publishEvent(RabbitMQConfig.ADMIN_ACTION_KEY, event);
     }
 
     @Override

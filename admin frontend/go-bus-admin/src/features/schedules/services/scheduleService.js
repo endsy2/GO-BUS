@@ -1,19 +1,6 @@
 import axiosInstance from 'services/axiosConfig';
 
 const scheduleService = {
-  // Get all schedules with pagination
-  getSchedules: async (pageNo = 1, pageSize = 10) => {
-    const response = await axiosInstance.get('/schedules', {
-      params: { pageNo, pageSize }
-    });
-    return response.data;
-  },
-
-  // Get schedule by ID
-  getScheduleById: async (id) => {
-    const response = await axiosInstance.get(`/schedules/${id}`);
-    return response.data;
-  },
 
   // Get all schedules for a specific bus (used to pre-check time conflicts)
   getSchedulesByBus: async (busId) => {
@@ -74,11 +61,6 @@ const scheduleService = {
     return response.data;
   },
 
-  // Get bus details by schedule ID (legacy - if still needed)
-  getBusBySchedule: async (scheduleId) => {
-    const response = await axiosInstance.get(`/buses/schedule/${scheduleId}`);
-    return response.data;
-  },
 };
 
 export default scheduleService;

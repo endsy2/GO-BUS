@@ -27,14 +27,8 @@ public interface BusClient {
     @GetMapping("/schedules/{id}")
     ResponseEntity<ApiResponse<ScheduleInfo>> getScheduleById(@PathVariable("id") Long id);
 
-    @GetMapping("/routes/{id}")
-    ResponseEntity<ApiResponse<RouteInfo>> getRouteById(@PathVariable("id") Long id);
-
     @GetMapping("/routes/schedule/{scheduleId}")
     ResponseEntity<ApiResponse<RouteInfo>> getRouteByScheduleId(@PathVariable("scheduleId") Long id);
-
-    @PostMapping("/routes/batch/by-schedules")
-    ResponseEntity<ApiResponse<java.util.List<RouteInfo>>> getRoutesByScheduleIds(@RequestBody java.util.List<Long> scheduleIds);
 
     @PostMapping("/routes/batch/by-schedules/mapped")
     ResponseEntity<ApiResponse<java.util.List<ScheduleRouteInfo>>> getRoutesWithScheduleMapping(@RequestBody Set<Long> scheduleIds);
@@ -46,10 +40,6 @@ public interface BusClient {
     ResponseEntity<ApiResponse<SeatResponse>> getSeatById(@PathVariable Long id);
 
     // ── Schedule Seat Endpoints ────────────────────────────────────────────────
-    
-    @GetMapping("/schedule-seats/schedule/{scheduleId}/available")
-    ResponseEntity<ApiResponse<List<ScheduleSeatResponse>>> getAvailableSeatsBySchedule(
-            @PathVariable("scheduleId") Long scheduleId);
     
     @PostMapping("/schedule-seats/schedule/{scheduleId}/check-availability")
     ResponseEntity<ApiResponse<Boolean>> checkSeatsAvailability(

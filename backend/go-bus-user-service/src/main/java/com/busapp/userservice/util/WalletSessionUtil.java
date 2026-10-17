@@ -38,18 +38,4 @@ public class WalletSessionUtil {
         log.debug("[WALLET AUTH] Session validated and refreshed for user: {}", currentUserId);
     }
 
-    /**
-     * Check if wallet session is valid without throwing exception
-     * 
-     * @param walletSessionToken Session token to check
-     * @return true if valid, false otherwise
-     */
-    public boolean isSessionValid(String walletSessionToken) {
-        if (walletSessionToken == null || walletSessionToken.isBlank()) {
-            return false;
-        }
-        
-        Long currentUserId = userUtil.getCurrentUserId();
-        return walletSessionService.isWalletSessionValid(currentUserId, walletSessionToken);
-    }
 }

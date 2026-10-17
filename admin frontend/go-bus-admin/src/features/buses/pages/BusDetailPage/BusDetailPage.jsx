@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Edit, Trash2, Bus as BusIcon, Users, Hash, Tag, MapPin, BarChart3, Layout } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Bus as BusIcon, Users, Hash, Tag, MapPin, Layout } from 'lucide-react';
 import { Button } from 'shared/components/ui/button';
 import { Card, CardContent } from 'shared/components/ui/card';
 import { useToast } from 'shared/components/ui/toast';

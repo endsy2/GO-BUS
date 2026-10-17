@@ -2,13 +2,11 @@ package com.busapp.bookingservice.service.impl;
 
 import com.busapp.bookingservice.dto.response.*;
 import com.busapp.bookingservice.model.Booking;
-import com.busapp.bookingservice.model.Payment;
 import com.busapp.bookingservice.model.PromoCode;
 import com.busapp.bookingservice.model.enums.BookingStatus;
 import com.busapp.bookingservice.model.enums.PaymentMethodType;
 import com.busapp.bookingservice.model.enums.ReportPeriod;
 import com.busapp.bookingservice.repository.BookingRepository;
-import com.busapp.bookingservice.repository.PaymentRepository;
 import com.busapp.bookingservice.repository.PromoCodeRepository;
 import com.busapp.bookingservice.service.FinancialReportService;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +25,6 @@ import java.util.stream.Collectors;
 public class FinancialReportServiceImpl implements FinancialReportService {
 
     private final BookingRepository bookingRepository;
-    private final PaymentRepository paymentRepository;
     private final PromoCodeRepository promoCodeRepository;
 
     @Override

@@ -27,18 +27,6 @@ public class RolePermissionCacheService {
     private final RoleRepository roleRepository;
 
     /**
-     * Get role with permissions by role ID (cached for 1 hour)
-     */
-    @Cacheable(value = "roleWithPermissions", key = "#roleId")
-    public RoleResponse getRoleWithPermissions(Long roleId) {
-        Role role = roleRepository.findById(roleId).orElse(null);
-        if (role == null) {
-            return null;
-        }
-        return mapToRoleResponse(role);
-    }
-
-    /**
      * Get multiple roles with permissions by role IDs (cached)
      */
     @Cacheable(value = "rolesWithPermissions", key = "#roleIds.toString()")

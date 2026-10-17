@@ -1,15 +1,14 @@
-from urllib.parse import  unquote
+import json
+from urllib.parse import unquote
 
 from dotenv import load_dotenv
-from fastapi import HTTPException, Header
+from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 from bakong_khqr import KHQR
 import os
 import httpx
 import logging
-from pip._internal.cli import status_codes
 from datetime import datetime
-from typing import Optional
 
 load_dotenv()  # Load environment variables from .env
 
@@ -44,17 +43,14 @@ async def renew_bakong_token(email: str):
             response = await client.post(url, json=payload, headers=headers)
 
             logging.info(f"Status Code: {response.status_code}")
-            logging.info(f"Response Text: {response.text}")
 
             response.raise_for_status()
 
             data = response.json()
 
-            logging.info(f"Parsed JSON: {data}")
-
             bakong_token = data["data"]["token"]
 
-            logging.info(f"Bakong token renewed successfully: {bakong_token}")
+            logging.info("Bakong token renewed successfully")
 
             return bakong_token
 
@@ -98,13 +94,10 @@ async def verifyMD5(md5: str):
             raise HTTPException(status_code=400, detail="md5 is required")
 
         # Check if bakong_token exists, if not renew it
-        current_bakong_token =await renew_bakong_token(email)
-        print (f"Email:{email}")
-        print(f"Current Bakong token: {current_bakong_token}")
+        current_bakong_token = await renew_bakong_token(email)
         if not current_bakong_token:
             logging.info("Bakong token not found, renewing...")
             current_bakong_token = await renew_bakong_token()
-        # token="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7ImlkIjoiYmMwMTRkMTUzMDc4NGQyMiJ9LCJpYXQiOjE3NzkzMDA5MjQsImV4cCI6MTc4NzA3NjkyNH0.zNY--bamXOSxDm_eO2xqDd8UaciEamwNq5R8JFN4ytg"
         # 1️⃣ Check KHQR payment status
         khqr = KHQR(current_bakong_token)
         check_payment = khqr.check_payment(md5)
@@ -122,7 +115,6 @@ async def verifyMD5(md5: str):
 
         # 3️⃣ If payment_info still returns JSONResponse, extract dict
         if hasattr(payment_info_result, "body"):
-            import json
             payment_info_dict = json.loads(payment_info_result.body.decode())
         else:
             payment_info_dict = payment_info_result  # assume it's already dict
@@ -193,17 +185,3 @@ def generateQR(amount: float, currency: str, merchant_name: str,bank_account:str
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
-
-async def get_token_from_header(authorization: Optional[str] = Header(None)):
-    """
-    Extract Bearer token from request header
-    """
-    if not authorization:
-        raise HTTPException(status_code=401, detail="Authorization header missing")
-
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Invalid authorization header format")
-
-    token = authorization.split(" ")[1]
-    return token

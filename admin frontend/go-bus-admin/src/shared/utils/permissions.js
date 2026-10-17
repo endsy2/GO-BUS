@@ -32,7 +32,6 @@ export const canCreateCustomers = (user) => hasPermission(user, 'USER_WRITE');
 export const canViewBuses = (user) => hasPermission(user, 'BUS_READ');
 export const canEditBuses = (user) => hasPermission(user, 'BUS_WRITE');
 export const canDeleteBuses = (user) => hasPermission(user, 'BUS_DELETE');
-export const canCreateBuses = (user) => hasPermission(user, 'BUS_WRITE');
 
 // Booking-specific permission checks
 export const canViewBookings = (user) => hasPermission(user, 'BOOKING_READ');

@@ -1,6 +1,5 @@
 package com.busapp.bookingservice.service.impl;
 
-import com.busapp.bookingservice.client.UserClient;
 import com.busapp.bookingservice.config.TelegramConfig;
 import com.busapp.bookingservice.dto.response.BookingResponse;
 import com.busapp.bookingservice.dto.response.PaymentResponse;
@@ -23,7 +22,6 @@ public class TelegramNotificationServiceImpl extends TelegramLongPollingBot impl
 
     private final TelegramConfig telegramConfig;
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-    private final UserClient userClient;
 
     @Override
     public String getBotUsername() {

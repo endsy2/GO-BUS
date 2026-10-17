@@ -121,7 +121,9 @@ services:
       - busapp-net
 
   minio:
-    image: minio/minio:latest
+    # minio/minio was deleted from Docker Hub in Sept 2026. pgsty/minio is a
+    # community fork built from the same source (same CLI, /data volume and mc).
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
     container_name: busapp-minio-dev
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}

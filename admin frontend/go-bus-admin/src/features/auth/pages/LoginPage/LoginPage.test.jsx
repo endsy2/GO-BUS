@@ -22,7 +22,7 @@ jest.mock('../../services/authService', () => ({
   },
 }));
 
-jest.mock('features/team/services/userService', () => ({
+jest.mock('features/team/services/teamService', () => ({
   __esModule: true,
   default: {
     getProfile: jest.fn(),

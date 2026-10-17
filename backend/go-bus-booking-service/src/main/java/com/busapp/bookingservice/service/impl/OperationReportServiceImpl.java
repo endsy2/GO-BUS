@@ -90,15 +90,6 @@ public class OperationReportServiceImpl implements OperationReportService {
                         
                         // Fetch route to get route name
                         String routeName = bus.route().origin()+" - "+bus.route().destination();
-//                        try {
-//                            var routeResp = busClient.getRouteById(routeId);
-//                            if (routeResp.getBody() != null && routeResp.getBody().data() != null) {
-//                                var route = routeResp.getBody().data();
-//                                routeName = route.origin() + " - " + route.destination();
-//                            }
-//                        } catch (Exception e) {
-//                            log.warn("Could not fetch route name for routeId {}", routeId);
-//                        }
                         log.info("Route name = {}", routeName);
 
                         RouteRevenueData data = routeRevenueMap.getOrDefault(routeId, 
@@ -175,16 +166,6 @@ public class OperationReportServiceImpl implements OperationReportService {
                         
                         // Fetch route to get route name
                         String routeName = bus.route().origin() + " - " + bus.route().destination();
-//                        try {
-//                            var routeResp = busClient.getRouteById(routeId);
-//                            if (routeResp.getBody() != null && routeResp.getBody().data() != null) {
-//                                var route = routeResp.getBody().data();
-//                                routeName = route.name() != null ? route.name() :
-//                                           route.origin() + " - " + route.destination();
-//                            }
-//                        } catch (Exception e) {
-//                            log.warn("Could not fetch route name for routeId {}", routeId);
-//                        }
 
                         PopularRouteData data = routePopularityMap.getOrDefault(routeId, 
                             new PopularRouteData(routeId, routeName, 0L, 0L, 0L, 0L, 0, 0));

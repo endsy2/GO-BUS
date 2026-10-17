@@ -220,7 +220,6 @@ const RouteDetailPage = ({ routeId, onBack }) => {
     );
   }
 
-  const location = parseLocation(route.location);
   const originLocation = parseLocation(route.originLocation);
   const destinationLocation = parseLocation(route.destinationLocation);
 

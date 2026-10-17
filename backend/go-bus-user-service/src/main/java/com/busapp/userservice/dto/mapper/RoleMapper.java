@@ -5,7 +5,6 @@ import com.busapp.userservice.dto.admin.RoleResponse;
 import com.busapp.userservice.model.Permission;
 import com.busapp.userservice.model.Role;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

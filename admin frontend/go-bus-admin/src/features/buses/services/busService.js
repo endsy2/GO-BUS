@@ -31,11 +31,6 @@ const busService = {
     return response.data;
   },
 
-  // Get bus statistics
-  getBusStats: async () => {
-    const response = await axiosInstance.get('/buses/stats');
-    return response.data;
-  },
 };
 
 export default busService;

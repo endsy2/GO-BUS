@@ -17,11 +17,5 @@ public interface ScheduleService {
 
     // ── Admin ──────────────────────────────────────────────────────────────────
 
-//    List<ScheduleResponse> getSchedulesByDateRange(LocalDateTime from, LocalDateTime to);
-//
-//    List<ScheduleResponse> getSchedulesByBusAndDateRange(Long busId, LocalDateTime from, LocalDateTime to);
-//
-//    List<ScheduleResponse> getSchedulesByMaxPrice(Double maxPrice);
-
     Page<ScheduleResponse> getSchedulesWithSpecification(Long routeId,LocalDateTime from, LocalDateTime to,  Double maxPrice, Integer pageNo, Integer pageSize);
 }

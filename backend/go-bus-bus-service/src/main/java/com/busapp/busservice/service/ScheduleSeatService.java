@@ -10,11 +10,6 @@ import java.util.Map;
 public interface ScheduleSeatService {
     
     /**
-     * Get all seats for a specific schedule with their availability status
-     */
-    List<ScheduleSeatResponse> getSeatsBySchedule(Long scheduleId);
-    
-    /**
      * Get detailed schedule seat information including full bus details
      */
     ScheduleSeatDetailResponse getScheduleSeatsWithBusDetails(Long scheduleId);
@@ -28,11 +23,6 @@ public interface ScheduleSeatService {
      * Get a specific seat for a schedule
      */
     ScheduleSeatResponse getScheduleSeat(Long scheduleId, Long seatId);
-    
-    /**
-     * Update seat status for a specific schedule
-     */
-    ScheduleSeatResponse updateScheduleSeatStatus(Long scheduleId, Long seatId, SeatStatus status, Long bookingId);
     
     /**
      * Initialize schedule seats when a new schedule is created
